@@ -1,0 +1,3301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0D6B66">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Balistique">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" type="image/png" href="icone-192.png">
+<title>Balistique WMLRF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --fond: #ECF0F1;
+    --panneau: #FFFFFF;
+    --panneau-2: #F5F7F8;
+    --encre: #11191E;
+    --sourdine: #55636B;
+    --trait: #CBD5D9;
+    --trait-fort: #9FB0B7;
+    --accent: #0D6B66;
+    --accent-encre: #FFFFFF;
+    --accent-doux: #D5EAE8;
+    --erreur: #B3261E;
+    --afficheur: #0E1518;
+    --afficheur-trait: #24343B;
+    --afficheur-chiffre: #F1F5F4;
+    --afficheur-libelle: #8B9DA2;
+    --afficheur-sens: #62D2C7;
+    --afficheur-alerte: #F0A63A;
+    --ombre: 0 1px 2px rgba(17, 25, 30, .06), 0 10px 28px rgba(17, 25, 30, .10);
+    --rayon: 10px;
+    --police: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --police-etroite: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    --police-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --fond: #0A0F11;
+      --panneau: #121A1E;
+      --panneau-2: #0E1519;
+      --encre: #E4EBED;
+      --sourdine: #93A3AA;
+      --trait: #243139;
+      --trait-fort: #3B4C56;
+      --accent: #45BDB3;
+      --accent-encre: #06201E;
+      --accent-doux: #143632;
+      --erreur: #FF8A80;
+      --afficheur: #0C1316;
+      --afficheur-trait: #2A3B43;
+      --ombre: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --fond: #0A0F11;
+    --panneau: #121A1E;
+    --panneau-2: #0E1519;
+    --encre: #E4EBED;
+    --sourdine: #93A3AA;
+    --trait: #243139;
+    --trait-fort: #3B4C56;
+    --accent: #45BDB3;
+    --accent-encre: #06201E;
+    --accent-doux: #143632;
+    --erreur: #FF8A80;
+    --afficheur: #0C1316;
+    --afficheur-trait: #2A3B43;
+    --ombre: none;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--encre);
+    font: 400 15px/1.5 var(--police);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-inline: clamp(16px, 4vw, 40px);
+    padding-block: 28px 56px;
+  }
+
+  /* En-tête */
+  .entete { display: grid; gap: 6px; margin-bottom: 22px; }
+  .surtitre {
+    margin: 0;
+    font: 500 12px/1.2 var(--police-mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sourdine);
+  }
+  h1 {
+    margin: 0;
+    font: 600 clamp(28px, 4.4vw, 38px)/1.05 var(--police-etroite);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  .chapeau { margin: 4px 0 0; max-width: 68ch; color: var(--sourdine); }
+
+  /* Grille principale */
+  .grille {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "resultat" "saisie";
+  }
+  .resultat { grid-area: resultat; }
+  .saisie { grid-area: saisie; display: grid; gap: 16px; }
+  @media (min-width: 900px) {
+    .grille {
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
+      grid-template-areas: "saisie resultat";
+      align-items: start;
+    }
+    .resultat { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  }
+
+  /* Blocs de saisie */
+  fieldset {
+    margin: 0;
+    min-width: 0;
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    background: var(--panneau);
+    padding: 16px 18px 18px;
+  }
+  legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  legend + * { clear: both; }
+  .titre-bloc {
+    font: 600 12px/1.2 var(--police);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--sourdine);
+  }
+  .note-bloc { font-size: 13px; color: var(--sourdine); }
+  .champs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px 14px;
+  }
+  .champ { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; align-content: start; min-width: 0; }
+  .champ > label, .champ > .etiquette {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--encre);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .etiquette { font-size: 13px; font-weight: 500; color: var(--encre); }
+  .aide { font-size: 12px; line-height: 1.35; color: var(--sourdine); }
+  .saisie-unite {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    border: 1px solid var(--trait-fort);
+    border-radius: 7px;
+    background: var(--panneau-2);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .saisie-unite:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
+  .saisie-unite input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--encre);
+    font: 500 16px/1.2 var(--police);
+    font-variant-numeric: tabular-nums;
+    padding: 9px 10px;
+    outline: none;
+  }
+  .saisie-unite input::placeholder { color: var(--sourdine); opacity: .8; }
+  .unite {
+    padding-inline: 4px 10px;
+    font: 400 13px/1 var(--police-mono);
+    color: var(--sourdine);
+    white-space: nowrap;
+  }
+  .saisie-unite:has(input[aria-invalid="true"]) { border-color: var(--erreur); }
+
+  /* Table V0 */
+  .table-v0, .table-dsf {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+    max-width: 440px;
+  }
+  .table-v0 .entete-col, .table-dsf .entete-col { font-size: 12px; color: var(--sourdine); font-weight: 500; }
+  .table-v0 .rang, .table-dsf .rang { font: 500 12px var(--police-mono); color: var(--sourdine); }
+  .sous-bloc-interne { display: grid; gap: 10px; }
+  .sortie-calcul { font-size: 13px; color: var(--sourdine); font-variant-numeric: tabular-nums; }
+  .sortie-calcul.erreur { color: var(--erreur); }
+  .visuellement-cache {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .sous-bloc { display: grid; gap: 10px; }
+  .sous-bloc + .sous-bloc { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--trait); }
+  .sous-titre { margin: 0; font-size: 13px; font-weight: 600; }
+
+  /* Choix segmentés */
+  .segments {
+    display: inline-flex;
+    border: 1px solid var(--trait-fort);
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--panneau-2);
+  }
+  .segments input { position: absolute; opacity: 0; pointer-events: none; }
+  .segments label {
+    padding: 6px 12px;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sourdine);
+    cursor: pointer;
+    user-select: none;
+  }
+  .segments label + input + label { border-left: 1px solid var(--trait-fort); }
+  .segments input:checked + label { background: var(--accent); color: var(--accent-encre); }
+  .segments input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -3px; }
+  /* Dans une grille de champs, le choix occupe toute la largeur, segments égaux (rien ne dépasse). */
+  .champ > .segments { display: flex; }
+  .champ > .segments label { flex: 1 1 0; text-align: center; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  button {
+    font: 500 14px/1 var(--police);
+    color: var(--encre);
+    background: var(--panneau);
+    border: 1px solid var(--trait-fort);
+    border-radius: 7px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Afficheur de la solution */
+  .afficheur {
+    background: var(--afficheur);
+    color: var(--afficheur-chiffre);
+    border: 1px solid var(--afficheur-trait);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    box-shadow: var(--ombre);
+  }
+  .afficheur-tete {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    font: 500 12px/1.3 var(--police-mono);
+    letter-spacing: .05em;
+    color: var(--afficheur-libelle);
+  }
+  .afficheur-tete strong { font-weight: 500; color: var(--afficheur-chiffre); text-transform: uppercase; letter-spacing: .1em; }
+  .mesures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 18px;
+    margin-top: 16px;
+    transition: opacity .15s;
+  }
+  .mesure { display: grid; gap: 4px; min-width: 0; }
+  .mesure .lib {
+    font: 500 11px/1.2 var(--police);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--afficheur-libelle);
+  }
+  .mesure .val {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font: 600 clamp(38px, 9vw, 50px)/1 var(--police-etroite);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+  }
+  .mesure .sens {
+    font: 600 .5em/1 var(--police-etroite);
+    color: var(--afficheur-sens);
+    min-width: 1ch;
+  }
+  .mesure .u { font: 400 12px/1 var(--police-mono); color: var(--afficheur-libelle); }
+  .mesure.secondaire .val { font-size: clamp(26px, 5.5vw, 30px); }
+  .mesures .trait {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--afficheur-trait);
+  }
+  .alertes { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .alertes li {
+    font: 500 12px/1.3 var(--police);
+    color: var(--afficheur-alerte);
+    border: 1px solid color-mix(in srgb, var(--afficheur-alerte) 45%, transparent);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+  .erreur-calcul {
+    margin: 14px 0 0;
+    font-size: 14px;
+    color: #FFB4A9;
+    border-left: 3px solid #FF8A80;
+    padding-left: 10px;
+  }
+  .afficheur.en-erreur .mesures, .afficheur.en-erreur .details { opacity: .3; }
+  .details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 12em; /* colonne des valeurs fixe : l'afficheur ne change pas de forme */
+    gap: 7px 14px;
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--afficheur-trait);
+    font-size: 13px;
+    transition: opacity .15s;
+  }
+  .details dt { color: var(--afficheur-libelle); }
+  .details dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-family: var(--police-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .convention { margin: 14px 0 0; font-size: 12px; line-height: 1.45; color: var(--afficheur-libelle); }
+  .ligne-afficheur {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    font: 500 14px/1.35 var(--police-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .ligne-afficheur .lib {
+    font: 500 11px/1.2 var(--police);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--afficheur-libelle);
+  }
+  .ligne-afficheur b { color: var(--afficheur-sens); font-weight: 600; }
+
+  /* Aides de tir */
+  .aides {
+    margin-top: 20px;
+    background: var(--panneau);
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    padding: 16px 18px 18px;
+  }
+  .aides-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 24px; }
+  .aide-outil { display: grid; gap: 5px; align-content: start; }
+  .aide-outil .lib { font: 600 11px/1.2 var(--police); letter-spacing: .09em; text-transform: uppercase; color: var(--sourdine); }
+  .aide-outil .val { font: 600 30px/1.1 var(--police-etroite); font-variant-numeric: tabular-nums; }
+  .aide-outil .val small { font: 400 13px var(--police-mono); color: var(--sourdine); margin-left: 4px; }
+  .aide-outil .segments { justify-self: start; }
+  .aide-outil .plage { display: flex; flex-wrap: wrap; gap: 2px 14px; font: 600 17px/1.25 var(--police-etroite); font-variant-numeric: tabular-nums; }
+  .aide-outil .plage small { font: 500 11px/1 var(--police); letter-spacing: .08em; text-transform: uppercase; color: var(--sourdine); margin-right: 5px; }
+  .valeurs-qw { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 2px 0 0; padding: 0; list-style: none; font: 400 12.5px/1.4 var(--police-mono); font-variant-numeric: tabular-nums; }
+  .valeurs-qw li b { font-weight: 500; color: var(--sourdine); margin-right: 3px; }
+
+  /* Calibration */
+  .calib-conseil { margin: 0; font-size: 13px; color: var(--encre); }
+  .calib-resultat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 440px; }
+  .calib-case { border: 1px solid var(--trait); border-radius: 7px; background: var(--panneau-2); padding: 8px 10px; display: grid; gap: 2px; }
+  .calib-case span:first-child { font: 500 11px/1.2 var(--police); letter-spacing: .08em; text-transform: uppercase; color: var(--sourdine); }
+  .calib-case span:last-child { font: 600 20px/1.2 var(--police-etroite); font-variant-numeric: tabular-nums; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:disabled:hover { border-color: var(--trait-fort); }
+
+  /* WEZ */
+  .wez {
+    margin-top: 20px;
+    background: var(--panneau);
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    padding: 16px 18px 18px;
+  }
+  .wez-grille { display: grid; gap: 20px 28px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 900px) { .wez-grille { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+  .wez-saisie { display: grid; gap: 0; align-content: start; min-width: 0; }
+  .wez-resultat { display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .wez-tete { display: flex; align-items: baseline; gap: 10px 14px; flex-wrap: wrap; }
+  .wez-p { font: 600 52px/1 var(--police-etroite); letter-spacing: -.01em; }
+  .wez-ligne { margin: 0; font-size: 13px; color: var(--encre); font-variant-numeric: tabular-nums; }
+  .wez-contrib { width: auto; min-width: 260px; max-width: 360px; font-size: 13px; }
+  .wez-contrib caption { text-align: left; font-size: 12px; color: var(--sourdine); padding-bottom: 4px; }
+  .wez-contrib th, .wez-contrib td { padding: 4px 10px; }
+  .wez-contrib th:first-child, .wez-contrib td:first-child { padding-left: 0; }
+  .wez figure { margin: 0; display: grid; gap: 6px; }
+  .wez figcaption { font-size: 12px; color: var(--sourdine); }
+  .courbe-cadre { position: relative; }
+  .courbe-cadre svg, .cible-cadre svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .courbe-cadre svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+  .cible-cadre { max-width: 420px; }
+  .graphe-grille { stroke: var(--trait); stroke-width: 1; }
+  .graphe-texte { fill: var(--sourdine); font: 400 11px var(--police); font-variant-numeric: tabular-nums; }
+  .graphe-trait { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .graphe-aire { fill: var(--accent); fill-opacity: .1; stroke: none; }
+  .graphe-point { fill: var(--accent); stroke: var(--panneau); stroke-width: 2; }
+  .graphe-repere { stroke: var(--sourdine); stroke-width: 1; }
+  .graphe-cible { fill: none; stroke: var(--encre); stroke-width: 1.5; }
+  .graphe-impact-touche { fill: var(--accent); fill-opacity: .75; }
+  .graphe-impact-manque { fill: var(--sourdine); fill-opacity: .55; }
+  .infobulle {
+    position: absolute; pointer-events: none; transform: translate(-50%, -100%);
+    background: var(--afficheur); color: var(--afficheur-chiffre); border-radius: 6px;
+    padding: 5px 8px; font: 500 12px/1.3 var(--police); white-space: nowrap; box-shadow: var(--ombre);
+  }
+  .infobulle b { font: 600 14px var(--police-etroite); font-variant-numeric: tabular-nums; }
+  .legende { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--sourdine); }
+  .legende span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+  .legende .l-touche::before { background: var(--accent); }
+  .legende .l-manque::before { background: var(--sourdine); opacity: .7; }
+
+  /* Range card */
+  .carte-reglages { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 10px; font-size: 13px; }
+  .carte-reglages .saisie-unite { width: 104px; }
+  .carte-reglages .saisie-unite input { padding: 6px 8px; font-size: 14px; }
+
+  /* Table de tir */
+  .trajectoire {
+    margin-top: 20px;
+    background: var(--panneau);
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    padding: 16px 18px 12px;
+  }
+  .trajectoire-tete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 10px; }
+  h2 { margin: 0; font: 600 20px/1.2 var(--police-etroite); }
+  .defile { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th {
+    text-align: right;
+    font: 600 11px/1.2 var(--police);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sourdine);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--trait-fort);
+    white-space: nowrap;
+  }
+  td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.cible td { background: var(--accent-doux); font-weight: 600; }
+  td.vide { color: var(--sourdine); }
+  @media (max-width: 520px) {
+    table { font-size: 13px; }
+    th, td { padding-inline: 6px; }
+  }
+
+  /* Notes */
+  .notes {
+    margin-top: 20px;
+    background: var(--panneau);
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    padding: 4px 18px;
+  }
+  .notes summary {
+    cursor: pointer;
+    padding: 12px 0;
+    font-weight: 600;
+  }
+  .notes summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .notes-corps { display: grid; gap: 14px; padding-bottom: 16px; max-width: 78ch; font-size: 14px; }
+  .notes-corps h3 { margin: 0 0 4px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--sourdine); }
+  .notes-corps ul { margin: 0; padding-left: 1.1em; display: grid; gap: 3px; }
+  .notes-corps p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+
+  /* Barre de lecture sur petit écran */
+  .barre {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--afficheur);
+    color: var(--afficheur-chiffre);
+    border-top: 1px solid var(--afficheur-trait);
+  }
+  .barre div { display: grid; gap: 2px; min-width: 0; }
+  .barre span:first-child { font: 500 10px/1 var(--police); letter-spacing: .1em; text-transform: uppercase; color: var(--afficheur-libelle); }
+  .barre span:last-child { font: 600 20px/1.1 var(--police-etroite); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .barre b { color: var(--afficheur-sens); font-weight: 600; }
+  @media (max-width: 899px) { .page { padding-bottom: 96px; } }
+  @media (min-width: 900px) { .barre { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+<noscript>
+  <p style="margin:12px 0;padding:12px 14px;border:1px solid #B3261E;border-radius:10px;background:#FDECEA;color:#B3261E;font-weight:600">
+    Cette page a besoin de JavaScript. Sur iPhone, l'aperçu de l'app Fichiers ne l'exécute pas : ouvre l'adresse du site dans Safari.
+  </p>
+</noscript>
+  <header class="entete">
+    <p class="surtitre">WMLRF · application balistique · solveur v0.4</p>
+    <h1>Balistique WMLRF</h1>
+    <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, cible mobile, probabilité de toucher.</p>
+  </header>
+
+  <main class="grille">
+    <aside class="resultat" aria-label="Solution de tir">
+      <div class="afficheur" id="afficheur">
+        <div class="afficheur-tete">
+          <strong>Solution</strong>
+          <span id="r-titre">—</span>
+        </div>
+        <div class="mesures" aria-live="polite">
+          <div class="mesure">
+            <span class="lib">Élévation</span>
+            <span class="val"><span id="r-elev">—</span><span class="sens" id="r-elev-sens"></span></span>
+            <span class="u">mrad · depuis le zéro</span>
+          </div>
+          <div class="mesure">
+            <span class="lib">Dérive</span>
+            <span class="val"><span class="sens" id="r-der-sens"></span><span id="r-der">—</span></span>
+            <span class="u" id="r-der-texte">mrad</span>
+          </div>
+          <div class="trait" aria-hidden="true"></div>
+          <div class="mesure secondaire">
+            <span class="lib">Temps de vol</span>
+            <span class="val"><span id="r-tof">—</span></span>
+            <span class="u">s</span>
+          </div>
+          <div class="mesure secondaire">
+            <span class="lib">Vitesse à la cible</span>
+            <span class="val"><span id="r-v">—</span></span>
+            <span class="u" id="r-mach">m/s</span>
+          </div>
+          <div class="ligne-afficheur" id="r-vent2" hidden><span class="lib">Vent 2</span><span id="r-vent2-texte">—</span></div>
+          <div class="ligne-afficheur" id="r-cible" hidden><span class="lib">Cible mobile</span><span id="r-cible-texte">—</span></div>
+          <div class="ligne-afficheur" id="r-devers" hidden><span class="lib" id="r-devers-titre">Dévers</span><span id="r-devers-texte">—</span></div>
+        </div>
+        <ul class="alertes" id="r-alertes"></ul>
+        <p class="erreur-calcul" id="r-erreur" role="alert" hidden></p>
+        <dl class="details">
+          <dt>dont vent</dt><dd id="d-vent">—</dd>
+          <dt>dont gyroscopique</dt><dd id="d-gyro">—</dd>
+          <dt>dont Coriolis</dt><dd id="d-cor-h">—</dd>
+          <dt>Saut aérodynamique</dt><dd id="d-saut">—</dd>
+          <dt>Coriolis vertical</dt><dd id="d-cor-v">—</dd>
+          <dt>DSF · CDF</dt><dd id="d-dsf">—</dd>
+          <dt>V0 utilisée</dt><dd id="d-v0">—</dd>
+          <dt>Stabilité (Miller)</dt><dd id="d-sg">—</dd>
+          <dt>Densité de l'air</dt><dd id="d-rho">—</dd>
+          <dt>Angle du zéro</dt><dd id="d-zero">—</dd>
+        </dl>
+        <p class="convention">↑ monter · L/R : tourner la tourelle de dérive vers la gauche (L) ou la droite (R). mrad = millième de radian (tourelles MRAD).</p>
+      </div>
+    </aside>
+
+    <div class="saisie">
+      <form id="formulaire" novalidate autocomplete="off">
+        <div class="saisie">
+          <fieldset>
+            <legend><span class="titre-bloc">Tir</span><span class="note-bloc">change à chaque tir</span></legend>
+            <div class="sous-bloc">
+            <div class="champs">
+              <div class="champ">
+                <label for="t-distance">Distance</label>
+                <div class="saisie-unite"><input id="t-distance" inputmode="decimal"><span class="unite">m</span></div>
+                <span class="aide">oblique, lue au télémètre</span>
+              </div>
+              <div class="champ">
+                <label for="t-site">Angle de site</label>
+                <div class="saisie-unite"><input id="t-site" inputmode="decimal"><span class="unite">°</span></div>
+                <span class="aide">positif vers le haut</span>
+              </div>
+              <div class="champ">
+                <label for="t-azimut">Azimut</label>
+                <div class="saisie-unite"><input id="t-azimut" inputmode="decimal"><span class="unite">°</span></div>
+                <span class="aide">vrai (nord géographique)</span>
+              </div>
+              <div class="champ">
+                <label for="t-latitude">Latitude</label>
+                <div class="saisie-unite"><input id="t-latitude" inputmode="decimal"><span class="unite">°</span></div>
+                <span class="aide">positive au nord</span>
+              </div>
+              <div class="champ">
+                <label for="t-temp">Température</label>
+                <div class="saisie-unite"><input id="t-temp" inputmode="decimal"><span class="unite">°C</span></div>
+                <span class="aide">de l'air</span>
+              </div>
+              <div class="champ">
+                <label for="t-poudre">Poudre</label>
+                <div class="saisie-unite"><input id="t-poudre" inputmode="decimal" placeholder="= air"><span class="unite">°C</span></div>
+                <span class="aide">vide : température de l'air</span>
+              </div>
+              <div class="champ">
+                <label for="t-pression">Pression station</label>
+                <div class="saisie-unite"><input id="t-pression" inputmode="decimal"><span class="unite">hPa</span></div>
+                <span class="aide">absolue, non ramenée au niveau de la mer</span>
+              </div>
+              <div class="champ">
+                <label for="t-humidite">Humidité relative</label>
+                <div class="saisie-unite"><input id="t-humidite" inputmode="decimal"><span class="unite">%</span></div>
+              </div>
+            </div>
+            </div>
+
+            <div class="sous-bloc">
+              <p class="sous-titre">Vent</p>
+              <div class="champs">
+                <div class="champ">
+                  <label for="v-1">Vent 1</label>
+                  <div class="saisie-unite"><input id="v-1" inputmode="decimal" placeholder="0"><span class="unite">m/s</span></div>
+                  <span class="aide">moyen, au poste de tir</span>
+                </div>
+                <div class="champ">
+                  <label for="v-2">Vent 2</label>
+                  <div class="saisie-unite"><input id="v-2" inputmode="decimal" placeholder="facultatif"><span class="unite">m/s</span></div>
+                  <span class="aide">maximal (rafale), au moins le vent 1</span>
+                </div>
+                <div class="champ">
+                  <label for="v-dir">Direction</label>
+                  <div class="saisie-unite"><input id="v-dir" inputmode="decimal"><span class="unite">h</span></div>
+                  <span class="aide">d'où il vient : 3 h = de la droite, 9 h = de la gauche, 12 h = de face</span>
+                </div>
+              </div>
+              <div class="champs">
+                <div class="champ">
+                  <label for="vz-distance">Vent à distance, dès</label>
+                  <div class="saisie-unite"><input id="vz-distance" inputmode="decimal" placeholder="facultatif"><span class="unite">m</span></div>
+                  <span class="aide">remplace vent 1 et vent 2 au-delà de cette distance</span>
+                </div>
+                <div class="champ">
+                  <label for="vz-vitesse">Vitesse à distance</label>
+                  <div class="saisie-unite"><input id="vz-vitesse" inputmode="decimal" placeholder="0"><span class="unite">m/s</span></div>
+                </div>
+                <div class="champ">
+                  <label for="vz-dir">Direction à distance</label>
+                  <div class="saisie-unite"><input id="vz-dir" inputmode="decimal"><span class="unite">h</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sous-bloc">
+              <p class="sous-titre">Cible mobile</p>
+              <div class="champs">
+                <div class="champ">
+                  <label for="c-vitesse-kmh">Vitesse</label>
+                  <div class="saisie-unite"><input id="c-vitesse-kmh" inputmode="decimal" placeholder="0"><span class="unite">km/h</span></div>
+                  <span class="aide">vide : cible fixe</span>
+                </div>
+                <div class="champ">
+                  <span class="etiquette" id="lib-sens-cible">Se déplace vers</span>
+                  <div class="segments" role="radiogroup" aria-labelledby="lib-sens-cible">
+                    <input type="radio" id="sc-gauche" name="senscible" value="gauche"><label for="sc-gauche">gauche</label>
+                    <input type="radio" id="sc-droite" name="senscible" value="droite"><label for="sc-droite">droite</label>
+                  </div>
+                </div>
+                <div class="champ">
+                  <label for="c-angle">Angle</label>
+                  <div class="saisie-unite"><input id="c-angle" inputmode="decimal"><span class="unite">°</span></div>
+                  <span class="aide">avec la ligne de tir ; 90° = en travers</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sous-bloc">
+              <p class="sous-titre">Tir en dévers</p>
+              <div class="champs">
+                <div class="champ">
+                  <label for="t-devers">Dévers</label>
+                  <div class="saisie-unite"><input id="t-devers" inputmode="decimal" placeholder="0"><span class="unite">°</span></div>
+                  <span class="aide">rotation de l'arme autour de la ligne de visée ; vide : arme d'aplomb</span>
+                </div>
+                <div class="champ">
+                  <span class="etiquette" id="lib-sens-devers">Haut de l'arme vers</span>
+                  <div class="segments" role="radiogroup" aria-labelledby="lib-sens-devers">
+                    <input type="radio" id="dv-gauche" name="sensdevers" value="gauche"><label for="dv-gauche">gauche</label>
+                    <input type="radio" id="dv-droite" name="sensdevers" value="droite"><label for="dv-droite">droite</label>
+                  </div>
+                </div>
+              </div>
+              <span class="aide">L'impact part du côté du dévers et un peu bas. La ligne « Dévers » de la solution donne la correction à ajouter et le total, comptés à la verticale et à l'horizontale vraies.</span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="titre-bloc">Arme et munition</span><span class="note-bloc" id="note-profil">profil fixe</span></legend>
+            <div class="sous-bloc">
+              <div class="actions">
+                <span class="sous-titre" id="titre-v0">Vitesse initiale selon la température de la poudre</span>
+                <div class="segments" role="radiogroup" aria-labelledby="titre-v0">
+                  <input type="radio" id="mv-table" name="modev0" value="table"><label for="mv-table">table</label>
+                  <input type="radio" id="mv-pente" name="modev0" value="pente"><label for="mv-pente">pente</label>
+                </div>
+              </div>
+              <div class="sous-bloc-interne" id="bloc-v0-table">
+              <div class="table-v0" role="group" aria-label="Table V0">
+                <span></span><span class="entete-col">Température (°C)</span><span class="entete-col">V0 (m/s)</span>
+                <span class="rang">1</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-t1">Température du point 1</label><input id="v0-t1" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-v1">V0 du point 1</label><input id="v0-v1" inputmode="decimal"></div>
+                <span class="rang">2</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-t2">Température du point 2</label><input id="v0-t2" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-v2">V0 du point 2</label><input id="v0-v2" inputmode="decimal"></div>
+                <span class="rang">3</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-t3">Température du point 3</label><input id="v0-t3" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="v0-v3">V0 du point 3</label><input id="v0-v3" inputmode="decimal"></div>
+              </div>
+              <span class="aide">1 à 3 points ; interpolation linéaire, extrapolation signalée hors plage.</span>
+              </div>
+              <div class="sous-bloc-interne" id="bloc-v0-pente" hidden>
+                <div class="champs">
+                  <div class="champ">
+                    <label for="v0p-v">V0</label>
+                    <div class="saisie-unite"><input id="v0p-v" inputmode="decimal"><span class="unite">m/s</span></div>
+                  </div>
+                  <div class="champ">
+                    <label for="v0p-t">à la température</label>
+                    <div class="saisie-unite"><input id="v0p-t" inputmode="decimal"><span class="unite">°C</span></div>
+                  </div>
+                  <div class="champ">
+                    <label for="v0p-pente">Pente</label>
+                    <div class="saisie-unite"><input id="v0p-pente" inputmode="decimal"><span class="unite">m/s/°C</span></div>
+                    <span class="aide">variation de V0 par °C de poudre</span>
+                  </div>
+                </div>
+                <p class="sortie-calcul" id="v0p-sortie">—</p>
+              </div>
+            </div>
+
+            <div class="sous-bloc">
+              <div class="actions">
+                <span class="etiquette" id="lib-unite">Dimensions de balle et pas en</span>
+                <div class="segments" role="radiogroup" aria-labelledby="lib-unite">
+                  <input type="radio" id="u-in" name="unite" value="in"><label for="u-in">pouces</label>
+                  <input type="radio" id="u-mm" name="unite" value="mm"><label for="u-mm">mm</label>
+                </div>
+              </div>
+              <div class="champs">
+                <div class="champ">
+                  <label for="p-bc">BC G7</label>
+                  <div class="saisie-unite"><input id="p-bc" inputmode="decimal"><span class="unite">lb/in²</span></div>
+                </div>
+                <div class="champ">
+                  <label for="p-poids">Poids</label>
+                  <div class="saisie-unite"><input id="p-poids" inputmode="decimal"><span class="unite">gr</span></div>
+                </div>
+                <div class="champ">
+                  <label for="p-diametre">Diamètre</label>
+                  <div class="saisie-unite"><input id="p-diametre" inputmode="decimal"><span class="unite u-balle">in</span></div>
+                </div>
+                <div class="champ">
+                  <label for="p-longueur">Longueur</label>
+                  <div class="saisie-unite"><input id="p-longueur" inputmode="decimal"><span class="unite u-balle">in</span></div>
+                </div>
+                <div class="champ">
+                  <label for="p-pas">Pas</label>
+                  <div class="saisie-unite"><input id="p-pas" inputmode="decimal"><span class="unite u-balle-pas">in/tour</span></div>
+                </div>
+                <div class="champ">
+                  <span class="etiquette" id="lib-sens">Sens du pas</span>
+                  <div class="segments" role="radiogroup" aria-labelledby="lib-sens">
+                    <input type="radio" id="s-droite" name="sens" value="droite"><label for="s-droite">droite</label>
+                    <input type="radio" id="s-gauche" name="sens" value="gauche"><label for="s-gauche">gauche</label>
+                  </div>
+                </div>
+                <div class="champ">
+                  <label for="p-entraxe">Entraxe</label>
+                  <div class="saisie-unite"><input id="p-entraxe" inputmode="decimal"><span class="unite">mm</span></div>
+                </div>
+                <div class="champ">
+                  <label for="p-zero">Distance de zéro</label>
+                  <div class="saisie-unite"><input id="p-zero" inputmode="decimal"><span class="unite">m</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sous-bloc">
+              <div class="actions">
+                <span class="sous-titre" id="lib-trainee">Traînée</span>
+                <div class="segments" role="radiogroup" aria-labelledby="lib-trainee">
+                  <input type="radio" id="tr-g7" name="trainee" value="g7"><label for="tr-g7">G7 BC</label>
+                  <input type="radio" id="tr-table" name="trainee" value="table"><label for="tr-table">table importée</label>
+                </div>
+                <button type="button" id="b-import-cdm">Importer une range card CDM…</button>
+                <input type="file" id="f-import-cdm" accept=".csv,text/csv" hidden>
+                <input type="hidden" id="trainee-json">
+              </div>
+              <p class="sortie-calcul" id="trainee-etat" role="status">—</p>
+              <span class="aide">Range card AB Quantum exportée en CSV avec le modèle CDM : la courbe de traînée est reconstruite à partir de ses colonnes vitesse et élévation, avec ce profil (V0, zéro, entraxe) et les conditions inscrites dans le fichier. Plus le pas de la carte est fin, plus la zone transsonique est précise.</span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="titre-bloc">Conditions du zérotage</span><span class="note-bloc">jour où le zéro a été fait</span></legend>
+            <div class="actions">
+              <span class="etiquette" id="lib-zero-actif">Prises en compte</span>
+              <div class="segments" role="radiogroup" aria-labelledby="lib-zero-actif">
+                <input type="radio" id="za-oui" name="zeroactif" value="oui"><label for="za-oui">oui</label>
+                <input type="radio" id="za-non" name="zeroactif" value="non"><label for="za-non">non</label>
+              </div>
+            </div>
+            <p class="aide" id="zero-inactif" hidden>Le zéro est recalculé dans les conditions du tir (air, pression, humidité, V0 de la poudre) : l'élévation reste nulle à la distance de zéro quelles que soient les conditions.</p>
+            <div class="champs" id="champs-zero" style="margin-top: 12px">
+              <div class="champ">
+                <label for="z-temp">Température</label>
+                <div class="saisie-unite"><input id="z-temp" inputmode="decimal"><span class="unite">°C</span></div>
+                <span class="aide">donne aussi la V0 du zéro</span>
+              </div>
+              <div class="champ">
+                <label for="z-pression">Pression station</label>
+                <div class="saisie-unite"><input id="z-pression" inputmode="decimal"><span class="unite">hPa</span></div>
+              </div>
+              <div class="champ">
+                <label for="z-humidite">Humidité relative</label>
+                <div class="saisie-unite"><input id="z-humidite" inputmode="decimal"><span class="unite">%</span></div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="titre-bloc">Calibrations</span><span class="note-bloc">bloc Tir = conditions du tir de calibration</span></legend>
+            <div class="sous-bloc">
+              <div class="actions">
+                <span class="etiquette" id="lib-ktype">Type</span>
+                <div class="segments" role="radiogroup" aria-labelledby="lib-ktype">
+                  <input type="radio" id="kt-v0" name="ktype" value="v0"><label for="kt-v0">V0</label>
+                  <input type="radio" id="kt-cdf" name="ktype" value="cdf"><label for="kt-cdf">CDF</label>
+                  <input type="radio" id="kt-dsf" name="ktype" value="dsf"><label for="kt-dsf">DSF</label>
+                </div>
+                <span id="bloc-kmode" class="actions">
+                  <span class="etiquette" id="lib-kmode">Mesure</span>
+                  <span class="segments" role="radiogroup" aria-labelledby="lib-kmode">
+                    <input type="radio" id="km-chute" name="kmode" value="chute"><label for="km-chute">chute</label>
+                    <input type="radio" id="km-vitesse" name="kmode" value="vitesse"><label for="km-vitesse">vitesse</label>
+                  </span>
+                </span>
+              </div>
+              <p class="calib-conseil" id="k-conseil">—</p>
+              <div class="champs">
+                <div class="champ" id="champ-k-cdf">
+                  <label for="k-cdf">CDF actuel</label>
+                  <div class="saisie-unite"><input id="k-cdf" inputmode="decimal"><span class="unite">×</span></div>
+                  <span class="aide">facteur sur la traînée ; 1 = G7 seul</span>
+                </div>
+                <div class="champ">
+                  <label for="k-dist">Distance du tir</label>
+                  <div class="saisie-unite"><input id="k-dist" inputmode="decimal"><span class="unite">m</span></div>
+                  <span class="aide">au-delà de la distance de zéro</span>
+                </div>
+                <div class="champ" id="champ-k-elev">
+                  <label for="k-elev">Élévation observée</label>
+                  <div class="saisie-unite"><input id="k-elev" inputmode="decimal"><span class="unite">mrad</span></div>
+                  <span class="aide">correction qui a touché</span>
+                </div>
+                <div class="champ" id="champ-k-vit" hidden>
+                  <label for="k-vit">Vitesse mesurée</label>
+                  <div class="saisie-unite"><input id="k-vit" inputmode="decimal"><span class="unite">m/s</span></div>
+                  <span class="aide">à la cible (radar Doppler)</span>
+                </div>
+              </div>
+              <div class="calib-resultat" aria-live="polite">
+                <div class="calib-case"><span id="k-actuel-lib">Actuelle</span><span id="k-actuel">—</span></div>
+                <div class="calib-case"><span id="k-calcule-lib">Calculée</span><span id="k-calcule">—</span></div>
+              </div>
+              <div class="actions">
+                <button type="button" id="b-appliquer" disabled>Appliquer</button>
+                <span class="sortie-calcul" id="k-sortie" role="status"></span>
+              </div>
+            </div>
+            <div class="sous-bloc" id="bloc-dsf">
+              <p class="sous-titre" id="titre-dsf">Table DSF</p>
+              <div class="table-dsf" role="group" aria-labelledby="titre-dsf">
+                <span></span><span class="entete-col">Mach</span><span class="entete-col">DSF</span>
+                <span class="rang">1</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m1">Mach du point DSF 1</label><input id="dsf-m1" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f1">DSF du point 1</label><input id="dsf-f1" inputmode="decimal"></div>
+                <span class="rang">2</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m2">Mach du point DSF 2</label><input id="dsf-m2" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f2">DSF du point 2</label><input id="dsf-f2" inputmode="decimal"></div>
+                <span class="rang">3</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m3">Mach du point DSF 3</label><input id="dsf-m3" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f3">DSF du point 3</label><input id="dsf-f3" inputmode="decimal"></div>
+                <span class="rang">4</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m4">Mach du point DSF 4</label><input id="dsf-m4" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f4">DSF du point 4</label><input id="dsf-f4" inputmode="decimal"></div>
+                <span class="rang">5</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m5">Mach du point DSF 5</label><input id="dsf-m5" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f5">DSF du point 5</label><input id="dsf-f5" inputmode="decimal"></div>
+                <span class="rang">6</span>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-m6">Mach du point DSF 6</label><input id="dsf-m6" inputmode="decimal"></div>
+                <div class="saisie-unite"><label class="visuellement-cache" for="dsf-f6">DSF du point 6</label><input id="dsf-f6" inputmode="decimal"></div>
+              </div>
+              <span class="aide">Élévation × DSF au Mach de la balle à la cible ; entre deux lignes, interpolation en Mach ; au-delà, valeur de la ligne extrême. La ligne à DSF 1 marque le Mach où la correction commence. « Appliquer » en type DSF ajoute une ligne.</span>
+              <div class="actions">
+                <button type="button" id="b-dsf-effacer">Effacer le DSF</button>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="actions">
+            <button type="button" id="b-exemple">Remettre le profil d'exemple</button>
+            <span class="aide" id="etat-sauvegarde">Les valeurs saisies restent dans ce navigateur.</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <section class="aides" aria-labelledby="titre-aides">
+    <div class="trajectoire-tete">
+      <h2 id="titre-aides">Aides de tir</h2>
+      <span class="aide">Tir à plat, sans vent ni Coriolis, atmosphère du bloc Tir, calibrations comprises.</span>
+    </div>
+    <div class="aides-grille">
+      <div class="aide-outil">
+        <span class="lib">Speed drop</span>
+        <span class="val" id="a-sd">—</span>
+        <span class="plage" id="a-sd-plage"></span>
+        <span class="aide" id="a-sd-texte">—</span>
+        <div class="segments" role="radiogroup" aria-label="Tolérance du speed drop">
+          <input type="radio" id="sd-01" name="tolsd" value="0.1"><label for="sd-01">± 0,1 mrad</label>
+          <input type="radio" id="sd-02" name="tolsd" value="0.2"><label for="sd-02">± 0,2 mrad</label>
+        </div>
+      </div>
+      <div class="aide-outil">
+        <span class="lib">Quick wind</span>
+        <span class="val" id="a-qw">—</span>
+        <span class="aide" id="a-qw-texte">—</span>
+        <ul class="valeurs-qw" id="a-qw-valeurs" aria-label="Correction pour un quick wind, par distance"></ul>
+      </div>
+      <div class="aide-outil">
+        <span class="lib">Wind dot (réticule Tremor)</span>
+        <span class="val" id="a-wd">—</span>
+        <span class="aide" id="a-wd-texte">—</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wez" aria-labelledby="titre-wez">
+    <div class="trajectoire-tete">
+      <h2 id="titre-wez">Probabilité de toucher (WEZ)</h2>
+      <span class="aide">Premier coup, point visé au centre de la cible, avec les corrections de la solution (vent 1, sans dévers ni avance).</span>
+    </div>
+    <div class="wez-grille">
+      <div class="wez-saisie" id="wez-saisie">
+        <div class="sous-bloc">
+          <div class="actions">
+            <span class="sous-titre" id="lib-forme">Cible</span>
+            <div class="segments" role="radiogroup" aria-labelledby="lib-forme">
+              <input type="radio" id="fc-rect" name="formecible" value="rectangle"><label for="fc-rect">rectangle</label>
+              <input type="radio" id="fc-cercle" name="formecible" value="cercle"><label for="fc-cercle">cercle</label>
+            </div>
+          </div>
+          <div class="champs">
+            <div class="champ" id="ch-w-largeur">
+              <label for="w-largeur">Largeur</label>
+              <div class="saisie-unite"><input id="w-largeur" inputmode="decimal"><span class="unite">cm</span></div>
+            </div>
+            <div class="champ" id="ch-w-hauteur">
+              <label for="w-hauteur">Hauteur</label>
+              <div class="saisie-unite"><input id="w-hauteur" inputmode="decimal"><span class="unite">cm</span></div>
+            </div>
+            <div class="champ" id="ch-w-diametre" hidden>
+              <label for="w-diametre">Diamètre</label>
+              <div class="saisie-unite"><input id="w-diametre" inputmode="decimal"><span class="unite">cm</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sous-bloc">
+          <p class="sous-titre">Arme et munition, d'un coup à l'autre</p>
+          <div class="champs">
+            <div class="champ">
+              <label for="w-fusil">Précision du fusil</label>
+              <div class="saisie-unite"><input id="w-fusil" inputmode="decimal"><span class="unite" id="w-fusil-unite">mrad</span></div>
+              <span class="aide">« tient dans … » : largeur contenant 95 % des impacts, sur chaque axe (convention d'AB Quantum)</span>
+            </div>
+            <div class="champ">
+              <span class="etiquette" id="lib-unitefusil">Groupement en</span>
+              <div class="segments" role="radiogroup" aria-labelledby="lib-unitefusil">
+                <input type="radio" id="uf-moa" name="unitefusil" value="moa"><label for="uf-moa">MOA</label>
+                <input type="radio" id="uf-mrad" name="unitefusil" value="mrad"><label for="uf-mrad">mrad</label>
+              </div>
+            </div>
+            <div class="champ">
+              <label for="w-v0">V0, écart-type</label>
+              <div class="saisie-unite"><input id="w-v0" inputmode="decimal"><span class="unite">m/s</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-trainee">Traînée, écart-type</label>
+              <div class="saisie-unite"><input id="w-trainee" inputmode="decimal"><span class="unite">%</span></div>
+              <span class="aide">variation du BC ou du Cd</span>
+            </div>
+          </div>
+        </div>
+        <div class="sous-bloc">
+          <p class="sous-titre">Mesures et estimations, écarts-types</p>
+          <div class="champs">
+            <div class="champ">
+              <label for="w-distance">Distance</label>
+              <div class="saisie-unite"><input id="w-distance" inputmode="decimal"><span class="unite">m</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-vent">Vent</label>
+              <div class="saisie-unite"><input id="w-vent" inputmode="decimal"><span class="unite">m/s</span></div>
+              <span class="aide" id="w-vent-aide">sur la vitesse, dans la direction du bloc Tir</span>
+            </div>
+            <div class="champ">
+              <label for="w-temp">Température</label>
+              <div class="saisie-unite"><input id="w-temp" inputmode="decimal"><span class="unite">°C</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-pression">Pression</label>
+              <div class="saisie-unite"><input id="w-pression" inputmode="decimal"><span class="unite">hPa</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-humidite">Humidité</label>
+              <div class="saisie-unite"><input id="w-humidite" inputmode="decimal"><span class="unite">%</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-site">Inclinaison</label>
+              <div class="saisie-unite"><input id="w-site" inputmode="decimal"><span class="unite">°</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-latitude">Latitude</label>
+              <div class="saisie-unite"><input id="w-latitude" inputmode="decimal"><span class="unite">°</span></div>
+            </div>
+            <div class="champ">
+              <label for="w-azimut">Azimut</label>
+              <div class="saisie-unite"><input id="w-azimut" inputmode="decimal"><span class="unite">°</span></div>
+            </div>
+          </div>
+          <span class="aide">Écart-type : l'erreur reste dans ± cette valeur 2 fois sur 3, comme les entrées du WEZ d'AB Quantum. Température : air seul (la V0 a sa propre ligne). Vide ou 0 : source ignorée.</span>
+        </div>
+        <p class="sortie-calcul erreur" id="wz-erreur" role="alert" hidden></p>
+      </div>
+
+      <div class="wez-resultat" aria-live="polite">
+        <div class="wez-tete">
+          <span class="wez-p" id="wz-p">—</span>
+          <span class="aide" id="wz-p-texte">—</span>
+        </div>
+        <p class="wez-ligne" id="wz-sigmas">—</p>
+        <table class="wez-contrib" id="wz-contrib" hidden>
+          <caption>Écart-type dû à chaque source, en mrad</caption>
+          <thead><tr><th scope="col">Source</th><th scope="col">Vertical</th><th scope="col">Latéral</th></tr></thead>
+          <tbody id="wz-contrib-corps"></tbody>
+        </table>
+        <figure>
+          <div class="courbe-cadre">
+            <svg id="wz-courbe" viewBox="0 0 560 230" role="img" tabindex="0" aria-labelledby="wz-courbe-titre"></svg>
+            <div class="infobulle" id="wz-bulle" hidden></div>
+          </div>
+          <figcaption id="wz-courbe-titre">Probabilité de toucher selon la distance, mêmes incertitudes et même cible (valeurs dans la table de tir).</figcaption>
+        </figure>
+        <figure>
+          <div class="cible-cadre"><svg id="wz-cible" viewBox="0 0 300 120" role="img" aria-labelledby="wz-cible-titre"></svg></div>
+          <div class="legende"><span class="l-touche">touché</span><span class="l-manque">manqué</span></div>
+          <figcaption id="wz-cible-titre">Impacts simulés à la distance de tir (400 premiers tirs), cible à l'échelle.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="trajectoire" aria-labelledby="titre-table">
+    <div class="trajectoire-tete">
+      <h2 id="titre-table">Table de tir</h2>
+      <span class="aide" id="table-legende">Mêmes conditions, même site, même azimut, même vent et même dévers.</span>
+    </div>
+    <div class="carte-reglages">
+      <label for="rc-debut">De</label>
+      <div class="saisie-unite"><input id="rc-debut" inputmode="decimal"><span class="unite">m</span></div>
+      <label for="rc-fin">à</label>
+      <div class="saisie-unite"><input id="rc-fin" inputmode="decimal"><span class="unite">m</span></div>
+      <label for="rc-pas">pas</label>
+      <div class="saisie-unite"><input id="rc-pas" inputmode="decimal"><span class="unite">m</span></div>
+      <button type="button" id="b-export">Exporter la range card (CSV)</button>
+      <span class="sortie-calcul" id="rc-sortie" role="status"></span>
+    </div>
+    <div class="defile">
+      <table>
+        <thead id="table-tete"></thead>
+        <tbody id="table-corps"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="notes">
+    <summary>Modèle, conventions et sources</summary>
+    <div class="notes-corps">
+      <div>
+        <h3>Conventions</h3>
+        <ul>
+          <li>Élévation : correction de hausse par rapport au zéro, en mrad ; ↑ = monter, ↓ = descendre.</li>
+          <li>Dérive : correction latérale en mrad ; L = tourner vers la gauche (la balle part à droite), R = vers la droite.</li>
+          <li>Vent : vent 1 = vent moyen, vent 2 = vent maximal, même direction ; direction sur le cadran de la ligne de tir, d'où vient le vent (12 h de face, 3 h de la droite, 6 h dans le dos, 9 h de la gauche). Vent horizontal. Le vent à distance remplace vent 1 et vent 2 à partir de la distance donnée (vitesse vide : air calme au-delà) ; le saut aérodynamique dépend du vent à la bouche.</li>
+          <li>Distance oblique et angle de site tels que les mesure le télémètre ; azimut vrai (un compas magnétique demande la correction de déclinaison) ; latitude positive au nord.</li>
+          <li>Pression station : pression absolue au poste de tir, pas le QNH ramené au niveau de la mer.</li>
+          <li>Zéro vertical : calculé à plat dans les conditions du zérotage, avec la V0 de sa température, sans vent ni Coriolis ; si ces conditions ne sont pas prises en compte, dans les conditions du tir.</li>
+          <li>Zéro latéral : la dérive gyroscopique et le Coriolis horizontal à la distance de zéro, rattrapés au zérotage, sont retranchés de la dérive (dérive nulle à la distance de zéro, comme AB Quantum).</li>
+          <li>Cible mobile : avance = vitesse × sin(angle) × temps de vol / distance, du côté où la cible se déplace ; la dérive affichée ne la comprend pas, la ligne « Cible mobile » donne le total.</li>
+          <li>Dévers : angle de l'arme autour de la ligne de visée, côté où penche le haut de l'arme. La ligne « Dévers » donne la correction à ajouter et le total ; élévation et dérive affichées au-dessus sont celles de l'arme d'aplomb.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Modèle</h3>
+        <p>Point matériel en trois dimensions intégré par Runge-Kutta d'ordre 4 (pas de 1 ms), traînée G7 (ou table importée) interpolée par PCHIP et multipliée par le CDF, calculée sur la vitesse relative à l'air ; densité de l'air et vitesse du son recalculées avec l'altitude le long de la trajectoire ; accélération de Coriolis −2Ω×v intégrée ; pesanteur normale selon la latitude. La dérive gyroscopique est ajoutée d'après le temps de vol. L'élévation est multipliée par le DSF au Mach de la balle à la cible, puis le saut aérodynamique dû au vent traversier lui est ajouté. Dévers : vu de la lunette, l'axe du canon vise à la distance R le point (dérive affichée, angle du zéro + élévation affichée − entraxe/R) ; le dévers fait tourner ce point autour de la ligne de visée, alors que la chute reste verticale ; l'écart d'impact est la différence (géométrie exacte dans le vide, contrôlée). Non modélisé : vent variable le long de la trajectoire.</p>
+      </div>
+      <div>
+        <h3>Calibrations</h3>
+        <ul>
+          <li>Les conditions du bloc Tir doivent être celles du tir de calibration. Le DSF est ignoré pendant le calcul de la V0 et du CDF.</li>
+          <li>V0 : la loi V0 (table ou pente) est décalée d'une même valeur à toutes les températures jusqu'à ce que l'élévation calculée égale l'élévation observée ; le zéro est recalculé avec la nouvelle V0. Distance conseillée : balle entre Mach 1,3 et 1,2 à la cible (AB Quantum ; le manuel RAPTAR-S donne Mach 1,4 à 1,2).</li>
+          <li>CDF : facteur unique sur la traînée, de la bouche à la cible, cherché pour que l'élévation calculée égale l'élévation observée (chute) ou que la vitesse calculée à la cible égale la vitesse mesurée (vitesse) ; premier point conseillé vers Mach 1,2. La ligne 1 du DSF est alors placée au Mach de ce point. V0 et CDF corrigent la même zone : l'un ou l'autre.</li>
+          <li>DSF : élévation observée ÷ élévation calculée, rangé avec le Mach de la balle à cette distance, ce qui le rend valable quand les conditions changent. Distance conseillée : balle sous Mach 0,9 (AB Quantum). Chaque ligne est calculée sans les autres : l'ordre des tirs de calibration est libre.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Aides de tir</h3>
+        <ul>
+          <li>Speed drop : correction ≈ distance/100 − SD (mrad, distance en m). SD = maximum de (distance/100 − élévation) moins la tolérance, arrondi au 0,1 le plus proche (x,x5 vers le bas) ; entre les distances mini et maxi, l'écart arrondi au 0,1 mrad reste dans la tolérance. Avec la traînée CDM reconstruite, cette règle redonne les valeurs du Kestrel à 2 m près.</li>
+          <li>Quick wind : vent traversier plein qui donne 0,5 mrad de dérive due au vent à 500 m, dérive gyroscopique et Coriolis exclus (méthode Accuracy 1st, « Short Wind Formula ») ; pour n fois ce vent, correction ≈ n × distance/1000. La liste donne la correction exacte pour un quick wind tous les 100 m.</li>
+          <li>Wind dot : à la distance où l'élévation vaut 4 mrad, vent traversier plein donnant 0,95 mrad de dérive due au vent (2e point de la ligne 4 mrad des réticules Tremor) ; un point vaut la moitié de ce vent. Dérive gyroscopique exclue.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Probabilité de toucher (WEZ)</h3>
+        <ul>
+          <li>Pour chaque source d'incertitude, le solveur calcule l'écart d'élévation et de dérive que produit un écart d'une unité, à chaque distance. L'impact suit alors une loi normale à deux dimensions ; 20 000 tirs simulés (tirage fixe) donnent la probabilité de toucher la cible centrée sur le point visé.</li>
+          <li>Toutes les entrées sont des écarts-types, sauf la précision du fusil : largeur contenant 95 % des impacts sur chaque axe (3,92 écarts-types). Température : air seul. L'incertitude de vent porte sur la vitesse du vent, dans la direction saisie au bloc Tir : de face ou arrière, elle ne disperse presque pas latéralement ; en travers, elle domine à longue distance. Le zéro de l'arme reste celui du tir nominal.</li>
+          <li>Conventions établies sur l'écran WEZ d'AB Quantum (1 000 m, vent 3 m/s de 3 h, mêmes réglages, cible 50 × 50 cm) : AB 17 %, page 17 % ; contributions par source identiques à quelques pour cent, sauf deux choix d'AB non repris. Distance : AB compte la pente de la trajectoire par rapport à l'axe du canon (31 mrad à 1 000 m) au lieu de la ligne de visée (19 mrad) ; 2 m d'erreur font 3,8 cm d'écart à 1 000 m, pas 6,5 cm. Azimut : AB approche le Coriolis vertical en tir tendu. Vent de 12 h : page 92 %, AB 90 % (écran) ou 86 % (colonne de la range card). AB ne tire que 100 coups par calcul : ±3 à 4 points d'un calcul à l'autre vers 85 %.</li>
+          <li>Linéaire : exact pour de petites incertitudes ; contrôlé contre 600 tirs calculés un à un (écart-type à 1 % près).</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Traînée importée</h3>
+        <p>Cd(M) = i · Cd<sub>G7</sub>(M) · f(M), f linéaire entre 17 nœuds de Mach 0,6 à 2,5, ajustée (Levenberg-Marquardt) pour que le solveur retrouve les vitesses et les élévations de la range card importée, profil de la page et conditions du fichier. Sur la carte CDM d'AB Quantum du 147 ELD-M (pas de 100 m) : élévation à 0,01 mrad près jusqu'à 1 700 m, 0,05 mrad à 2 000 m. Table reconstruite pour un usage personnel à partir des sorties d'AB Quantum.</p>
+      </div>
+      <div>
+        <h3>Sources</h3>
+        <ul>
+          <li>Loi G7 : <a href="https://jbmballistics.com/downloads/mcg7.txt" target="_blank" rel="noopener">JBM Ballistics, mcg7.txt</a> (84 points).</li>
+          <li>Stabilité : règle de Miller avec corrections de vitesse et d'atmosphère, <a href="https://arxiv.org/abs/1410.5340" target="_blank" rel="noopener">Courtney &amp; Miller, arXiv:1410.5340</a>.</li>
+          <li>Dérive gyroscopique : SD = 1,25 (SG + 1,2) TOF<sup>1,83</sup> pouces ; saut aérodynamique : 0,01 SG − 0,0024 l + 0,032 MOA par mph de vent traversier (l en calibres) ; B. Litz, <i>Applied Ballistics for Long Range Shooting</i>.</li>
+          <li>CDF et DSF : <a href="https://appliedballisticsllc.com/wp-content/uploads/2025/01/CDF.pdf" target="_blank" rel="noopener">B. Litz, The Evolution of Ballistic Calibration</a> ; manuel Wilcox RAPTAR-S, § 3.8.4 à 3.8.6 ; écrans de calibration d'AB Quantum (V0, CDF chute et vitesse, DSF).</li>
+          <li>Vent 1 et vent 2 : manuel Kestrel 5700 (vent moyen et vent maximal au poste de tir).</li>
+          <li>WEZ : <a href="https://appliedballisticsllc.com/wp-content/uploads/2021/06/Weapon-Employment-Zone-Analysis.pdf" target="_blank" rel="noopener">Applied Ballistics, Weapon Employment Zone Analysis</a> (principe) ; conventions d'entrée établies sur l'écran WEZ d'AB Quantum de l'auteur (probabilité et graphiques de contribution par source).</li>
+          <li>Speed drop, quick wind : <a href="https://kestrelinstruments.com/mwdownloads/download/link/id/391/" target="_blank" rel="noopener">Kestrel 5700 Elite, Accuracy 1st Guidance</a> ; Accuracy 1st, <i>Short Wind Formula</i> ; <a href="https://precisionrifleguy.com/2021/12/07/speed-wind-for-the-precision-rifleman-determining-your-gun-number/" target="_blank" rel="noopener">Precision Rifle Guy, gun number</a> ; wind dot : <a href="https://www.horusvision.com/how-to-use-tremor-reticle-wind-dots/" target="_blank" rel="noopener">Horus Vision, wind dots des réticules Tremor</a>.</li>
+          <li>Densité de l'air humide : <a href="https://www.nist.gov/system/files/documents/calibrations/CIPM-2007.pdf" target="_blank" rel="noopener">formule CIPM-2007</a> (Picard et al., Metrologia 45, 2008).</li>
+          <li>Vitesse du son : 331,3 × √(1 + T/273,15) m/s, document de décodage Kestrel 5700, § 7.</li>
+          <li>Rotation terrestre et pesanteur normale : WGS 84 (NGA.STND.0036) ; gradient de température : U.S. Standard Atmosphere 1976.</li>
+          <li>Profil d'exemple : 6,5 Creedmoor, Hornady 147 gr ELD Match, données de l'auteur (celles de ses range cards AB Quantum du 2026-09-23).</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Vérification</h3>
+        <p>60 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
+        <p>Comparé à la range card G7 d'AB Quantum avec les mêmes entrées (profil d'exemple, 1 000 m) : élévation à 0,005 mrad près jusqu'à 1 600 m, 0,07 mrad à 2 000 m ; vitesse à 0,5 m/s près. Dérive : AB Quantum compte le Coriolis horizontal par l'approximation Ω·X·sin φ·t, qui néglige le ralentissement de la balle ; avec elle, l'écart tombe à 0,005 mrad ; avec le Coriolis intégré, la dérive est plus faible de 0,01 mrad à 1 000 m et de 0,05 mrad à 2 000 m. Calibrations à 1 000 m pour 10,00 mrad : V0 838,4 m/s, CDF 0,913, DSF 0,943 à Mach 1,177, comme AB Quantum.</p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="barre" id="barre" hidden>
+  <div><span>Élévation</span><span id="b-elev">—</span></div>
+  <div><span>Dérive</span><span id="b-der">—</span></div>
+  <div><span>Temps de vol</span><span id="b-tof">—</span></div>
+</div>
+
+<script>
+/* solveur.js, intégré par assembler_site.py */
+/*
+ * solveur.js — Solveur balistique WMLRF, version 0.4
+ * Domaine : Application balistique (voir ../application_balistique.md).
+ *
+ * Modèle : point matériel à 3 degrés de liberté, traînée G7 ou table de traînée importée (facteur
+ * CDF), atmosphère variable avec l'altitude le long de la trajectoire, vent horizontal par zones
+ * (vent près de l'arme, vent à distance ; traînée calculée sur la vitesse relative à l'air),
+ * Coriolis vectoriel intégré dans l'équation du mouvement, dérive gyroscopique de Litz ajoutée au
+ * temps de vol, saut aérodynamique de Litz, facteur d'échelle de chute (DSF) fonction du Mach à la
+ * cible, avance sur cible mobile, dévers (rotation des corrections autour de la ligne de visée),
+ * zéro vertical et latéral, probabilité de toucher (WEZ).
+ * Hors modèle : vent variant continûment le long de la trajectoire.
+ *
+ * Repère local : origine au centre de la lunette ; x horizontal dans l'azimut du tir ;
+ * y vertical vers le haut ; z horizontal vers la droite. Unités SI en interne.
+ *
+ * Conventions de sortie :
+ *   élévation : correction de hausse par rapport au zéro, mrad, positive vers le haut ;
+ *   dérive    : correction latérale, mrad, positive vers la droite (R), négative à gauche (L).
+ */
+(function (racine, fabrique) {
+  if (typeof module === 'object' && module.exports) module.exports = fabrique();
+  else racine.Solveur = fabrique();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const VERSION = '0.4';
+
+  // ---------------------------------------------------------------------------
+  // Constantes et sources
+  // ---------------------------------------------------------------------------
+
+  // Rotation de la Terre et pesanteur normale : WGS 84, NGA.STND.0036 v1.0.0 (2014).
+  const OMEGA_TERRE = 7.292115e-5;        // rad/s
+  const GAMMA_EQUATEUR = 9.7803253359;    // m/s²
+  const K_SOMIGLIANA = 1.93185265241e-3;
+  const E2_WGS84 = 6.69437999014e-3;
+
+  // Atmosphère le long de la trajectoire : U.S. Standard Atmosphere 1976, couche 0–11 km.
+  const G0 = 9.80665;                     // m/s²
+  const M_AIR_US76 = 0.0289644;           // kg/mol
+  const R_US76 = 8.31432;                 // J/(mol·K)
+  const GRADIENT_T = 0.0065;              // K/m (la température baisse quand on monte)
+  const EXPOSANT_P = G0 * M_AIR_US76 / (R_US76 * GRADIENT_T);
+
+  // Vitesse du son : a = 331,3 × √(1 + T/273,15), acquis (kestrel-5700-ble-decodage.md, § 7).
+  const A0_SON = 331.3;
+
+  // Conversions exactes (définitions) sauf le pouce de mercure (NIST SP 811, conventionnel).
+  const POUCE = 0.0254;                   // m
+  const PIED = 0.3048;                    // m
+  const LB_PAR_IN2 = 0.45359237 / (POUCE * POUCE); // 1 lb/in² en kg/m² (≈ 703,07)
+  const HPA_PAR_INHG = 33.86389;          // hPa
+  const MOA_EN_MRAD = Math.PI / 10.8;     // 1 MOA = 1/60° = 0,2908882 mrad
+  const MPH_EN_MS = 0.44704;              // 1 mph en m/s
+
+  // Loi de traînée G7 (Mach, Cd) : JBM Ballistics, mcg7.txt, 84 points ;
+  // identique point à point à la table G7 de py-ballisticcalc (vérifié le 2026-09-22).
+  const G7_MACH = [0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60,
+    0.65, 0.70, 0.725, 0.75, 0.775, 0.80, 0.825, 0.85, 0.875, 0.90, 0.925, 0.95, 0.975, 1.0,
+    1.025, 1.05, 1.075, 1.10, 1.125, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.50, 1.55, 1.60, 1.65,
+    1.70, 1.75, 1.80, 1.85, 1.90, 1.95, 2.00, 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40,
+    2.45, 2.50, 2.55, 2.60, 2.65, 2.70, 2.75, 2.80, 2.85, 2.90, 2.95, 3.00, 3.10, 3.20, 3.30,
+    3.40, 3.50, 3.60, 3.70, 3.80, 3.90, 4.00, 4.20, 4.40, 4.60, 4.80, 5.00];
+  const G7_CD = [0.1198, 0.1197, 0.1196, 0.1194, 0.1193, 0.1194, 0.1194, 0.1194, 0.1193, 0.1193,
+    0.1194, 0.1193, 0.1194, 0.1197, 0.1202, 0.1207, 0.1215, 0.1226, 0.1242, 0.1266, 0.1306,
+    0.1368, 0.1464, 0.1660, 0.2054, 0.2993, 0.3803, 0.4015, 0.4043, 0.4034, 0.4014, 0.3987,
+    0.3955, 0.3884, 0.3810, 0.3732, 0.3657, 0.3580, 0.3440, 0.3376, 0.3315, 0.3260, 0.3209,
+    0.3160, 0.3117, 0.3078, 0.3042, 0.3010, 0.2980, 0.2951, 0.2922, 0.2892, 0.2864, 0.2835,
+    0.2807, 0.2779, 0.2752, 0.2725, 0.2697, 0.2670, 0.2643, 0.2615, 0.2588, 0.2561, 0.2533,
+    0.2506, 0.2479, 0.2451, 0.2424, 0.2368, 0.2313, 0.2258, 0.2205, 0.2154, 0.2106, 0.2060,
+    0.2017, 0.1975, 0.1935, 0.1861, 0.1793, 0.1730, 0.1672, 0.1618];
+
+  // ---------------------------------------------------------------------------
+  // Interpolation PCHIP (Fritsch–Carlson, pentes aux nœuds par moyenne harmonique
+  // pondérée, même algorithme que scipy.interpolate.PchipInterpolator).
+  // ---------------------------------------------------------------------------
+
+  function signe(a) { return a > 0 ? 1 : (a < 0 ? -1 : 0); }
+
+  function pchipBord(h0, h1, m0, m1) {
+    let d = ((2 * h0 + h1) * m0 - h0 * m1) / (h0 + h1);
+    if (signe(d) !== signe(m0)) d = 0;
+    else if (signe(m0) !== signe(m1) && Math.abs(d) > Math.abs(3 * m0)) d = 3 * m0;
+    return d;
+  }
+
+  function pchipPreparer(x, y) {
+    const n = x.length;
+    const h = new Array(n - 1), d = new Array(n - 1), m = new Array(n);
+    for (let i = 0; i < n - 1; i++) {
+      h[i] = x[i + 1] - x[i];
+      if (!(h[i] > 0)) throw new Error('PCHIP : abscisses non strictement croissantes');
+      d[i] = (y[i + 1] - y[i]) / h[i];
+    }
+    for (let k = 1; k < n - 1; k++) {
+      if (d[k - 1] === 0 || d[k] === 0 || signe(d[k - 1]) !== signe(d[k])) m[k] = 0;
+      else {
+        const w1 = 2 * h[k] + h[k - 1], w2 = h[k] + 2 * h[k - 1];
+        m[k] = (w1 + w2) / (w1 / d[k - 1] + w2 / d[k]);
+      }
+    }
+    m[0] = pchipBord(h[0], h[1], d[0], d[1]);
+    m[n - 1] = pchipBord(h[n - 2], h[n - 3], d[n - 2], d[n - 3]);
+    let dernier = 0; // intervalle du dernier appel : le Mach varie lentement
+    return function (xv) {
+      if (xv <= x[0]) return y[0];
+      if (xv >= x[n - 1]) return y[n - 1];
+      let i = dernier;
+      if (!(x[i] <= xv && xv < x[i + 1])) {
+        let bas = 0, haut = n - 1;
+        while (haut - bas > 1) { const mil = (bas + haut) >> 1; if (x[mil] <= xv) bas = mil; else haut = mil; }
+        i = bas; dernier = i;
+      }
+      const hh = h[i], t = (xv - x[i]) / hh, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * y[i] + (t3 - 2 * t2 + t) * hh * m[i]
+        + (-2 * t3 + 3 * t2) * y[i + 1] + (t3 - t2) * hh * m[i + 1];
+    };
+  }
+
+  function cdG7Nouveau() { return pchipPreparer(G7_MACH, G7_CD); }
+  const cdG7 = cdG7Nouveau();
+
+  // ---------------------------------------------------------------------------
+  // Atmosphère
+  // ---------------------------------------------------------------------------
+
+  // Densité de l'air humide : formule CIPM-2007, Picard et al., Metrologia 45 (2008) 149–155.
+  // Domaine de validité de la formule : 600–1100 hPa, 15–27 °C ; au-delà, extrapolation.
+  function densiteAir(tC, pHPa, hrPct) {
+    const TK = tC + 273.15, p = pHPa * 100;
+    const psv = Math.exp(1.2378847e-5 * TK * TK - 1.9121316e-2 * TK + 33.93711047 - 6.3431645e3 / TK);
+    const f = 1.00062 + 3.14e-8 * p + 5.6e-7 * tC * tC;
+    const xv = Math.min(Math.max(hrPct, 0), 100) / 100 * f * psv / p;
+    const Z = 1 - (p / TK) * (1.58123e-6 - 2.9331e-8 * tC + 1.1043e-10 * tC * tC
+      + (5.707e-6 - 2.051e-8 * tC) * xv + (1.9898e-4 - 2.376e-6 * tC) * xv * xv)
+      + (p / TK) * (p / TK) * (1.83e-11 - 0.765e-8 * xv * xv);
+    const Ma = 28.96546e-3, Mv = 18.01528e-3, R = 8.314472;
+    return p * Ma / (Z * R * TK) * (1 - xv * (1 - Mv / Ma));
+  }
+
+  function vitesseSon(tC) { return A0_SON * Math.sqrt(1 + tC / 273.15); }
+
+  function graviteNormale(latDeg) {
+    const s2 = Math.pow(Math.sin(latDeg * Math.PI / 180), 2);
+    return GAMMA_EQUATEUR * (1 + K_SOMIGLIANA * s2) / Math.sqrt(1 - E2_WGS84 * s2);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Munition
+  // ---------------------------------------------------------------------------
+
+  // Table vitesse initiale / température : 1 à 3 points ; interpolation linéaire par
+  // morceaux, extrapolation linéaire sur le segment extrême hors plage.
+  function vitesseInitiale(table, tC) {
+    const pts = (table || []).filter(p => isFinite(p.tempC) && isFinite(p.v0) && p.v0 > 0)
+      .map(p => ({ tempC: +p.tempC, v0: +p.v0 })).sort((a, b) => a.tempC - b.tempC);
+    if (pts.length === 0) throw new Error('Table V0 : au moins un point (température, V0) est requis.');
+    for (let i = 1; i < pts.length; i++) {
+      if (pts[i].tempC === pts[i - 1].tempC) throw new Error('Table V0 : deux points ont la même température.');
+    }
+    if (pts.length === 1) return { v0: pts[0].v0, extrapolee: false, points: 1 };
+    let i = 0;
+    if (tC >= pts[pts.length - 1].tempC) i = pts.length - 2;
+    else if (tC > pts[0].tempC) { while (!(pts[i].tempC <= tC && tC <= pts[i + 1].tempC)) i++; }
+    const a = pts[i], b = pts[i + 1];
+    const v0 = a.v0 + (tC - a.tempC) * (b.v0 - a.v0) / (b.tempC - a.tempC);
+    return { v0: v0, extrapolee: tC < pts[0].tempC || tC > pts[pts.length - 1].tempC, points: pts.length };
+  }
+
+  // Loi V0 du profil : pente (V0 de référence, température de référence, m/s par °C) si elle est
+  // donnée, sinon table. La pente est une loi linéaire, sans extrapolation à signaler.
+  function loiV0(profil, tC) {
+    const p = profil.penteV0;
+    if (p) {
+      if (!(p.v0 > 0) || !isFinite(p.tempC) || !isFinite(p.penteMSparC)) {
+        throw new Error('Pente V0 : V0, température et pente sont requises.');
+      }
+      return { v0: p.v0 + p.penteMSparC * (tC - p.tempC), extrapolee: false, points: 0 };
+    }
+    return vitesseInitiale(profil.tableV0, tC);
+  }
+
+  // Stabilité gyroscopique, règle de Miller avec corrections de vitesse et d'atmosphère :
+  // Courtney & Miller, « A Stability Formula for Plastic-Tipped Bullets », arXiv:1410.5340.
+  // SG = 30 m / (t² d³ l (1 + l²)) × (V/2800)^(1/3) × ((F + 460)/(59 + 460)) × (29,92/P)
+  // m en grains, t en calibres par tour, d en pouces, l en calibres, V en ft/s, F en °F, P en inHg.
+  function stabiliteMiller(masseGr, diametreM, longueurM, pasM, v0MS, tC, pHPa) {
+    const d = diametreM / POUCE, t = (pasM / POUCE) / d, l = (longueurM / POUCE) / d;
+    const sg0 = 30 * masseGr / (t * t * d * d * d * l * (1 + l * l));
+    const fv = Math.pow(v0MS / PIED / 2800, 1 / 3);
+    const F = tC * 9 / 5 + 32, P = pHPa / HPA_PAR_INHG;
+    const fa = ((F + 460) / (59 + 460)) * (29.92 / P);
+    return sg0 * fv * fa;
+  }
+
+  // Dérive gyroscopique de Litz (Applied Ballistics for Long Range Shooting) :
+  // SD [in] = 1,25 × (SG + 1,2) × TOF^1,83. Retour en mètres, du côté du sens du pas.
+  function deriveGyroscopique(sg, tofS) {
+    return 1.25 * (sg + 1.2) * Math.pow(tofS, 1.83) * POUCE;
+  }
+
+  // Saut aérodynamique de Litz (Applied Ballistics for Long Range Shooting, chap. 5) :
+  // sensibilité = 0,01 SG − 0,0024 l + 0,032 MOA par mph de vent traversier (l en calibres).
+  // Retour en mrad par m/s. Pas à droite : vent venant de la gauche → impact bas.
+  function sensibiliteSautAero(sg, longueurCalibres) {
+    return (0.01 * sg - 0.0024 * longueurCalibres + 0.032) * MOA_EN_MRAD / MPH_EN_MS;
+  }
+
+  // Vent horizontal constant. directionHeures : d'où vient le vent, sur le cadran de la ligne de
+  // tir (12 h = de face, 3 h = de la droite, 6 h = dans le dos, 9 h = de la gauche).
+  // Retour : vitesse de l'air dans le repère local (x vers la cible, z vers la droite).
+  function vecteurVent(vitesseMS, directionHeures) {
+    const th = directionHeures * Math.PI / 6;
+    return [-vitesseMS * Math.cos(th), 0, -vitesseMS * Math.sin(th)];
+  }
+
+  // Facteur d'échelle de chute (DSF) au Mach de la balle à la cible : table (Mach, DSF),
+  // interpolation linéaire en Mach ; au-dessus du Mach le plus élevé et au-dessous du plus bas,
+  // valeur du point extrême. Table vide : 1.
+  function facteurDSF(table, mach) {
+    const pts = (table || []).filter(p => isFinite(p.mach) && isFinite(p.dsf) && p.dsf > 0)
+      .map(p => ({ mach: +p.mach, dsf: +p.dsf })).sort((a, b) => b.mach - a.mach);
+    if (!pts.length) return 1;
+    if (mach >= pts[0].mach) return pts[0].dsf;
+    const n = pts.length;
+    if (mach <= pts[n - 1].mach) return pts[n - 1].dsf;
+    let i = 0;
+    while (!(pts[i].mach >= mach && mach >= pts[i + 1].mach)) i++;
+    const a = pts[i], b = pts[i + 1];
+    if (a.mach === b.mach) return b.dsf;
+    return a.dsf + (mach - a.mach) * (b.dsf - a.dsf) / (b.mach - a.mach);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Intégration de la trajectoire
+  // ---------------------------------------------------------------------------
+
+  // vent : vecteur du vent près de l'arme (ou null) ; zones : [{ x0, W }] triées par x0 croissant, vent W
+  // à partir de l'abscisse horizontale x0 (m), jusqu'à la zone suivante.
+  function contexte(v0, atmo, commun, coriolis, vent, zones) {
+    const TK0 = atmo.tempC + 273.15;
+    const ctx = {
+      v0: v0,
+      TK0: TK0,
+      rho0: densiteAir(atmo.tempC, atmo.pressionHPa, atmo.humiditePct),
+      kTrainee: Math.PI / 8 / (commun.bcG7 * LB_PAR_IN2) * (commun.cdf || 1),
+      vent: vent || null,
+      zones: zones && zones.length ? zones : null,
+      g: commun.g,
+      h: commun.hauteurViseurM,
+      decalageVertical: commun.decalageVertical,
+      dt: commun.dt,
+      tMax: commun.tMax,
+      cd: commun.cd,
+      a0Son: commun.a0Son || A0_SON,
+      seuilAtmo: commun.seuilAtmo || 0,
+      omega: null
+    };
+    if (coriolis) {
+      const phi = coriolis.latitudeDeg * Math.PI / 180, A = coriolis.azimutDeg * Math.PI / 180;
+      ctx.omega = [OMEGA_TERRE * Math.cos(phi) * Math.cos(A), OMEGA_TERRE * Math.sin(phi),
+        -OMEGA_TERRE * Math.cos(phi) * Math.sin(A)];
+    }
+    return ctx;
+  }
+
+  // Accélération (m/s²) ; parmi les positions, l'abscisse x (zones de vent) et l'altitude y interviennent.
+  // La traînée porte sur la vitesse relative à l'air (vent), Coriolis sur la vitesse par rapport au sol.
+  function acceleration(ctx, x, y, vx, vy, vz, sortie) {
+    let W = ctx.vent;
+    if (ctx.zones) { for (const zn of ctx.zones) { if (x >= zn.x0) W = zn.W; } }
+    const rx = W ? vx - W[0] : vx, ry = vy, rz = W ? vz - W[2] : vz;
+    const v = Math.sqrt(rx * rx + ry * ry + rz * rz);
+    let TK = ctx.TK0, rho = ctx.rho0;
+    if (Math.abs(y) >= ctx.seuilAtmo) { // seuil nul par défaut : atmosphère variable partout
+      TK = ctx.TK0 - GRADIENT_T * y;
+      rho = ctx.rho0 * Math.pow(TK / ctx.TK0, EXPOSANT_P) * ctx.TK0 / TK;
+    }
+    const son = ctx.a0Son * Math.sqrt(TK / 273.15);
+    const k = ctx.kTrainee * rho * ctx.cd(v / son) * v;
+    let ax = -k * rx, ay = -k * ry - ctx.g, az = -k * rz;
+    const O = ctx.omega;
+    if (O) { // Coriolis : a = -2 Ω × v
+      ax -= 2 * (O[1] * vz - O[2] * vy);
+      ay -= 2 * (O[2] * vx - O[0] * vz);
+      az -= 2 * (O[0] * vy - O[1] * vx);
+    }
+    sortie[0] = ax; sortie[1] = ay; sortie[2] = az;
+  }
+
+  // Intègre depuis la bouche, canon incliné de beta (rad) sur l'horizontale, jusqu'à
+  // l'abscisse horizontale xCible. Renvoie l'état interpolé en xCible, ou null si la balle
+  // n'y parvient pas.
+  function tracer(ctx, beta, xCible) {
+    const h = ctx.h, dt = ctx.dt;
+    let x = ctx.decalageVertical ? 0 : h * Math.sin(beta);
+    let y = ctx.decalageVertical ? -h : -h * Math.cos(beta);
+    let z = 0, t = 0;
+    let vx = ctx.v0 * Math.cos(beta), vy = ctx.v0 * Math.sin(beta), vz = 0;
+    if (xCible <= x) return { t: 0, x: x, y: y, z: z, vx: vx, vy: vy, vz: vz };
+    const a1 = [0, 0, 0], a2 = [0, 0, 0], a3 = [0, 0, 0], a4 = [0, 0, 0];
+    for (;;) {
+      acceleration(ctx, x, y, vx, vy, vz, a1);
+      const vx2 = vx + 0.5 * dt * a1[0], vy2 = vy + 0.5 * dt * a1[1], vz2 = vz + 0.5 * dt * a1[2];
+      acceleration(ctx, x + 0.5 * dt * vx, y + 0.5 * dt * vy, vx2, vy2, vz2, a2);
+      const vx3 = vx + 0.5 * dt * a2[0], vy3 = vy + 0.5 * dt * a2[1], vz3 = vz + 0.5 * dt * a2[2];
+      acceleration(ctx, x + 0.5 * dt * vx2, y + 0.5 * dt * vy2, vx3, vy3, vz3, a3);
+      const vx4 = vx + dt * a3[0], vy4 = vy + dt * a3[1], vz4 = vz + dt * a3[2];
+      acceleration(ctx, x + dt * vx3, y + dt * vy3, vx4, vy4, vz4, a4);
+      const xn = x + dt / 6 * (vx + 2 * vx2 + 2 * vx3 + vx4);
+      const yn = y + dt / 6 * (vy + 2 * vy2 + 2 * vy3 + vy4);
+      const zn = z + dt / 6 * (vz + 2 * vz2 + 2 * vz3 + vz4);
+      const vxn = vx + dt / 6 * (a1[0] + 2 * a2[0] + 2 * a3[0] + a4[0]);
+      const vyn = vy + dt / 6 * (a1[1] + 2 * a2[1] + 2 * a3[1] + a4[1]);
+      const vzn = vz + dt / 6 * (a1[2] + 2 * a2[2] + 2 * a3[2] + a4[2]);
+      if (xn >= xCible) {
+        // Hermite cubique en temps entre les deux pas ; fraction s telle que x(s) = xCible.
+        const H = (s, p0, p1, d0, d1) => {
+          const s2 = s * s, s3 = s2 * s;
+          return (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * dt * d0
+            + (-2 * s3 + 3 * s2) * p1 + (s3 - s2) * dt * d1;
+        };
+        const dH = (s, p0, p1, d0, d1) => {
+          const s2 = s * s;
+          return ((6 * s2 - 6 * s) * p0 + (3 * s2 - 4 * s + 1) * dt * d0
+            + (-6 * s2 + 6 * s) * p1 + (3 * s2 - 2 * s) * dt * d1);
+        };
+        let s = (xCible - x) / (xn - x);
+        for (let i = 0; i < 5; i++) {
+          s -= (H(s, x, xn, vx, vxn) - xCible) / dH(s, x, xn, vx, vxn);
+        }
+        return {
+          t: t + s * dt,
+          x: xCible,
+          y: H(s, y, yn, vy, vyn),
+          z: H(s, z, zn, vz, vzn),
+          vx: vx + s * (vxn - vx), vy: vy + s * (vyn - vy), vz: vz + s * (vzn - vz)
+        };
+      }
+      x = xn; y = yn; z = zn; vx = vxn; vy = vyn; vz = vzn; t += dt;
+      if (t > ctx.tMax || vx <= 0) return null;
+    }
+  }
+
+  // Angle du canon (rad, sur l'horizontale) pour passer par le point situé à la distance
+  // oblique R sous l'angle de site theta. Méthode de la sécante.
+  function resoudreAngle(ctx, R, theta, betaDepart) {
+    const xc = R * Math.cos(theta), yc = R * Math.sin(theta);
+    const hors = () => new Error('Cible hors de portée pour ce profil et ces conditions (' + R + ' m).');
+    let b0 = betaDepart, p0 = tracer(ctx, b0, xc);
+    if (!p0) throw hors();
+    let e0 = p0.y - yc;
+    let b1 = b0 - e0 * Math.pow(Math.cos(b0), 2) / xc, p1 = tracer(ctx, b1, xc);
+    if (!p1) throw hors();
+    let e1 = p1.y - yc;
+    for (let i = 0; i < 50; i++) {
+      if (Math.abs(e1) < 1e-7 || Math.abs(b1 - b0) < 1e-13) return { beta: b1, point: p1 };
+      const b2 = b1 - e1 * (b1 - b0) / (e1 - e0);
+      if (!isFinite(b2) || b2 > theta + 0.8 || b2 < theta - 0.8) throw hors();
+      const p2 = tracer(ctx, b2, xc);
+      if (!p2) throw hors();
+      b0 = b1; e0 = e1; b1 = b2; p1 = p2; e1 = p2.y - yc;
+    }
+    throw new Error('Le calcul de l\'angle ne converge pas (' + R + ' m).');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Interface
+  // ---------------------------------------------------------------------------
+
+  function verifier(cond, message) { if (!cond) throw new Error(message); }
+
+  function verifierEntrees(profil, tir) {
+    const tp = profil.traineePerso;
+    if (tp) {
+      verifier(Array.isArray(tp) && tp.length >= 2 && tp.every(p => isFinite(p.mach) && p.mach >= 0 && p.cd > 0),
+        'Table de traînée : au moins deux points (Mach, Cd) positifs.');
+    } else {
+      verifier(profil.bcG7 > 0, 'Coefficient balistique G7 : valeur positive requise.');
+    }
+    verifier(profil.masseGrains > 0, 'Poids de balle : valeur positive requise.');
+    verifier(profil.diametreM > 0, 'Diamètre de balle : valeur positive requise.');
+    verifier(profil.longueurM > profil.diametreM, 'Longueur de balle : doit dépasser le diamètre.');
+    verifier(profil.pasM > 0, 'Pas de rayure : valeur positive requise.');
+    verifier(profil.hauteurViseurM >= 0, 'Entraxe : valeur positive ou nulle requise.');
+    verifier(profil.distanceZeroM > 0, 'Distance de zéro : valeur positive requise.');
+    verifier(profil.cdf === undefined || profil.cdf === null || (profil.cdf >= 0.3 && profil.cdf <= 3),
+      'CDF : entre 0,3 et 3.');
+    verifier(tir.distanceM > 0, 'Distance : valeur positive requise.');
+    verifier(tir.pressionHPa > 100 && tir.pressionHPa < 1200, 'Pression : entre 100 et 1200 hPa.');
+    verifier(tir.humiditePct >= 0 && tir.humiditePct <= 100, 'Humidité : entre 0 et 100 %.');
+    verifier(tir.tempC > -60 && tir.tempC < 60, 'Température : entre −60 et 60 °C.');
+    verifier(Math.abs(tir.latitudeDeg) <= 90, 'Latitude : entre −90 et 90°.');
+    verifier(Math.abs(tir.siteDeg) < 80, 'Angle de site : entre −80 et 80°.');
+    verifier(isFinite(tir.azimutDeg), 'Azimut : valeur requise.');
+    const z = profil.zero;
+    if (z) { // sans conditions de zérotage, le zéro est calculé dans les conditions du tir
+      verifier(z.pressionHPa > 100 && z.pressionHPa < 1200, 'Zéro : pression entre 100 et 1200 hPa.');
+      verifier(z.humiditePct >= 0 && z.humiditePct <= 100, 'Zéro : humidité entre 0 et 100 %.');
+      verifier(z.tempC > -60 && z.tempC < 60, 'Zéro : température entre −60 et 60 °C.');
+    }
+    verifier(tir.deversDeg === undefined || tir.deversDeg === null || Math.abs(tir.deversDeg) < 90,
+      'Dévers : entre −90 et 90°.');
+    const v = tir.vent;
+    if (v) {
+      verifier(v.vitesse1MS >= 0 && v.vitesse1MS < 60, 'Vent 1 : entre 0 et 60 m/s.');
+      verifier(v.vitesse2MS === null || v.vitesse2MS === undefined || (v.vitesse2MS >= 0 && v.vitesse2MS < 60),
+        'Vent 2 : entre 0 et 60 m/s.');
+      verifier(isFinite(v.directionHeures), 'Direction du vent : valeur requise.');
+    }
+    const vz = tir.ventZone;
+    if (vz) {
+      verifier(vz.distanceM >= 0, 'Vent à distance : distance positive ou nulle requise.');
+      verifier(vz.vitesseMS >= 0 && vz.vitesseMS < 60, 'Vent à distance : entre 0 et 60 m/s.');
+      verifier(isFinite(vz.directionHeures), 'Vent à distance : direction requise.');
+    }
+    const c = tir.cible;
+    if (c) {
+      verifier(c.vitesseMS >= 0 && c.vitesseMS < 100, 'Cible mobile : vitesse entre 0 et 100 m/s.');
+      verifier(isFinite(c.angleDeg), 'Cible mobile : angle requis.');
+    }
+  }
+
+  // Prépare le calcul : zéro de l'arme et contextes d'intégration pour les conditions du tir.
+  // Zéro vertical : tir à plat sans vent ni Coriolis, dans les conditions du zérotage (profil.zero, V0 de sa
+  // température) ; sans profil.zero, dans les conditions du tir (température, pression, humidité, V0 de la
+  // poudre du jour) : l'élévation à la distance de zéro est alors toujours nulle.
+  // Zéro latéral (option zeroLateral) : au zérotage, le tireur ramène aussi l'impact sur l'axe vertical du
+  // réticule ; la dérive gyroscopique et le Coriolis horizontal à la distance de zéro sont absorbés par ce
+  // réglage et retranchés, en angle, des corrections de dérive (convention d'AB Quantum, vérifiée sur ses
+  // tables : dérive nulle à la distance de zéro).
+  // Options : dt (pas d'intégration, s) ; coriolis, deriveGyro, sautAero, dsfActif, decomposition
+  // (parts de Coriolis et du vent), zeroLateral : booléens ; gravite (m/s², sinon pesanteur normale WGS 84
+  // à la latitude) ; tMax (s). Réservées aux comparaisons : decalageVertical (entraxe compté à la
+  // verticale), vitesseSonA0 (m/s à 0 °C), seuilAtmosphereM (atmosphère figée sous ce seuil de |y|).
+  function preparer(profil, tir, options) {
+    const opt = Object.assign({ dt: 0.001, coriolis: true, deriveGyro: true, sautAero: true, dsfActif: true,
+      zeroLateral: true, gravite: null, decalageVertical: false, tMax: 30, decomposition: true,
+      vitesseSonA0: null, seuilAtmosphereM: 0 }, options || {});
+    verifierEntrees(profil, tir);
+    const g = opt.gravite || graviteNormale(tir.latitudeDeg);
+    const commun = { bcG7: profil.bcG7, cdf: profil.cdf || 1, g: g, hauteurViseurM: profil.hauteurViseurM,
+      decalageVertical: opt.decalageVertical, dt: opt.dt, tMax: opt.tMax, cd: cdG7Nouveau(),
+      a0Son: opt.vitesseSonA0, seuilAtmo: opt.seuilAtmosphereM };
+    if (profil.traineePerso) {
+      // Table de traînée propre à la balle (Cd absolu, Mach) : décélération = ρ v² Cd (π d²/4) / (2 m),
+      // soit la forme G7 avec un « BC » égal à la densité de section m/d² (lb/in²) et la table à la place de G7.
+      const pts = profil.traineePerso.map(p => ({ mach: +p.mach, cd: +p.cd })).sort((a, b) => a.mach - b.mach);
+      commun.cd = pchipPreparer(pts.map(p => p.mach), pts.map(p => p.cd));
+      commun.bcG7 = (profil.masseGrains / 7000) / Math.pow(profil.diametreM / POUCE, 2);
+    }
+
+    const tPoudre = (tir.tempPoudreC === null || tir.tempPoudreC === undefined || tir.tempPoudreC === '')
+      ? tir.tempC : +tir.tempPoudreC;
+    const atmo = { tempC: tir.tempC, pressionHPa: tir.pressionHPa, humiditePct: tir.humiditePct };
+    const zeroActif = !!profil.zero;
+    const atmoZero = zeroActif ? profil.zero : atmo;
+    const v0Zero = loiV0(profil, zeroActif ? profil.zero.tempC : tPoudre);
+    const main = profil.pasSens === -1 ? -1 : 1;
+    // Option zeroFixe { betaZero, zeroGyro, zeroCor } (rad) : réglage de l'arme imposé (WEZ : une variation de V0, de
+    // traînée ou de conditions d'un coup à l'autre ne change pas le zéro fait une fois pour toutes).
+    const zf = opt.zeroFixe;
+    const zeroSol = zf ? { beta: zf.betaZero } : resoudreAngle(contexte(v0Zero.v0, atmoZero, commun, null, null), profil.distanceZeroM, 0, 0);
+
+    let zeroGyro = zf ? (zf.zeroGyro || 0) : 0, zeroCor = zf ? (zf.zeroCor || 0) : 0; // rad, déviations latérales absorbées par le zéro (+ = balle à droite)
+    if (opt.zeroLateral && !zf) {
+      const corZ = opt.coriolis ? { latitudeDeg: tir.latitudeDeg, azimutDeg: tir.azimutDeg } : null;
+      const pz = tracer(contexte(v0Zero.v0, atmoZero, commun, corZ, null), zeroSol.beta, profil.distanceZeroM);
+      if (pz) {
+        zeroCor = Math.atan2(pz.z, profil.distanceZeroM);
+        if (opt.deriveGyro) {
+          const sgZ = stabiliteMiller(profil.masseGrains, profil.diametreM, profil.longueurM, profil.pasM,
+            v0Zero.v0, atmoZero.tempC, atmoZero.pressionHPa);
+          zeroGyro = Math.atan2(main * deriveGyroscopique(sgZ, pz.t), profil.distanceZeroM);
+        }
+      }
+    }
+
+    const v0 = loiV0(profil, tPoudre);
+    const cor = opt.coriolis ? { latitudeDeg: tir.latitudeDeg, azimutDeg: tir.azimutDeg } : null;
+    const vent = tir.vent || null;
+    const w1 = vent && vent.vitesse1MS > 0 ? vecteurVent(vent.vitesse1MS, vent.directionHeures) : null;
+    const aVent2 = !!vent && vent.vitesse2MS !== null && vent.vitesse2MS !== undefined && vent.vitesse2MS !== '';
+    const w2 = aVent2 && +vent.vitesse2MS > 0 ? vecteurVent(+vent.vitesse2MS, vent.directionHeures) : null;
+    // Vent à distance : remplace le vent 1 (et le vent 2) à partir de la distance donnée, comptée sur la ligne
+    // de tir ; l'abscisse horizontale de départ vaut distance × cos(site).
+    const vz = tir.ventZone || null;
+    const zones = vz ? [{ x0: vz.distanceM * Math.cos(tir.siteDeg * Math.PI / 180),
+      W: vz.vitesseMS > 0 ? vecteurVent(vz.vitesseMS, vz.directionHeures) : null }] : null;
+    const ctx = contexte(v0.v0, atmo, commun, cor, w1, zones);
+    const ctxVent2 = aVent2 ? contexte(v0.v0, atmo, commun, cor, w2, zones) : null;
+    const ctxSansCoriolis = opt.coriolis ? contexte(v0.v0, atmo, commun, null, w1, zones) : null;
+    const avecVent = !!w1 || !!(zones && zones[0].W);
+    const ctxSansVent = avecVent ? contexte(v0.v0, atmo, commun, cor, null) : null;
+    const sg = stabiliteMiller(profil.masseGrains, profil.diametreM, profil.longueurM, profil.pasM,
+      v0.v0, tir.tempC, tir.pressionHPa);
+    const sensAJ = sensibiliteSautAero(sg, profil.longueurM / profil.diametreM);
+    // Correction de hausse due au saut : main × sensibilité × vent traversier vers la droite (w[2]) à la
+    // bouche (le saut naît au départ du coup : vent à distance seulement s'il commence à la bouche).
+    const saut = w => (opt.sautAero && w) ? main * sensAJ * w[2] : 0;
+    const aBouche = w => (zones && zones[0].x0 <= 0) ? zones[0].W : w;
+
+    return { profil: profil, tir: tir, opt: opt, g: g, commun: commun, atmo: atmo, betaZero: zeroSol.beta,
+      zeroActif: zeroActif, zeroGyro: zeroGyro, zeroCor: zeroCor, zeroLateral: zeroGyro + zeroCor,
+      v0Zero: v0Zero, v0: v0, tempPoudreC: tPoudre, ctx: ctx, ctxVent2: ctxVent2,
+      ctxSansCoriolis: ctxSansCoriolis, ctxSansVent: ctxSansVent, sg: sg, main: main, sensAJ: sensAJ,
+      saut1: saut(aBouche(w1)), saut2: aVent2 ? saut(aBouche(w2)) : null, aVent2: aVent2, avecVent: avecVent,
+      rho: ctx.rho0, son: ctx.a0Son * Math.sqrt(1 + tir.tempC / 273.15) };
+  }
+
+  // Une solution pour un contexte donné : angle du canon, élévation (DSF puis saut), dérive (zéro latéral
+  // retranché).
+  function uneSolution(prep, ctx, R, theta, saut, betaDepart) {
+    const sol = resoudreAngle(ctx, R, theta, betaDepart);
+    const p = sol.point;
+    const sd = prep.opt.deriveGyro ? prep.main * deriveGyroscopique(prep.sg, p.t) : 0;
+    const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+    const TK = ctx.TK0 - GRADIENT_T * p.y;
+    const mach = v / (ctx.a0Son * Math.sqrt(TK / 273.15));
+    const brute = (sol.beta - theta - prep.betaZero) * 1000;
+    const dsf = prep.opt.dsfActif ? facteurDSF(prep.profil.dsf, mach) : 1;
+    return { beta: sol.beta, point: p, sd: sd, v: v, mach: mach, brute: brute, dsf: dsf,
+      elevation: brute * dsf + saut, derive: -(Math.atan2(p.z + sd, R) - prep.zeroLateral) * 1000 };
+  }
+
+  function avance(prep, R, tof) {
+    const c = prep.tir.cible;
+    if (!c || !(c.vitesseMS > 0)) return null;
+    const lateral = c.vitesseMS * Math.sin(c.angleDeg * Math.PI / 180) * tof;
+    return (c.sens === -1 ? -1 : 1) * Math.atan2(lateral, R) * 1000;
+  }
+
+  // Dévers : arme tournée de φ autour de la ligne de visée (φ > 0 : sens horaire vu du tireur, côté droit
+  // vers le bas). Vu depuis la lunette, l'axe du canon vise à la distance R le point (a, b) :
+  //   a = correction de dérive affichée, b = angle du zéro + élévation affichée − entraxe / R (rad).
+  // La rotation porte ce point en (a cos φ + b sin φ, −a sin φ + b cos φ) ; la chute, le vent, la dérive
+  // gyroscopique et Coriolis restent verticaux ou horizontaux. L'impact se déplace de la différence (vers le
+  // côté du dévers et vers le bas) ; la correction à ajouter en est l'opposé, comptée à la verticale et à
+  // l'horizontale vraies.
+  function effetDevers(prep, R, elevationMrad, deriveMrad, deversDeg) {
+    const phi = deversDeg * Math.PI / 180, c = Math.cos(phi), s = Math.sin(phi);
+    const a = deriveMrad / 1000;
+    const b = prep.betaZero + elevationMrad / 1000 - prep.profil.hauteurViseurM / R;
+    const dx = a * (c - 1) + b * s, dy = -a * s + b * (c - 1);
+    return { deversDeg: deversDeg, impactLateralMrad: dx * 1000, impactVerticalMrad: dy * 1000,
+      elevationMrad: elevationMrad - dy * 1000, deriveMrad: deriveMrad - dx * 1000 };
+  }
+
+  function solutionPreparee(prep, distanceM, decomposition) {
+    const theta = prep.tir.siteDeg * Math.PI / 180;
+    const R = distanceM;
+    const s = uneSolution(prep, prep.ctx, R, theta, prep.saut1, theta + prep.betaZero);
+    const p = s.point;
+    const res = {
+      distanceM: R,
+      elevationMrad: s.elevation,
+      deriveMrad: s.derive,
+      tempsVolS: p.t,
+      vitesseCibleMS: s.v,
+      machCible: s.mach,
+      dsf: s.dsf,
+      elevationBruteMrad: s.brute,          // sans DSF ni saut aérodynamique
+      sautAeroMrad: prep.saut1,
+      deriveGyroMrad: -(Math.atan2(s.sd, R) - prep.zeroGyro) * 1000,
+      deriveGyroM: s.sd,
+      deviationLateraleM: p.z + s.sd,       // déviation de la balle à la cible, + vers la droite (sans zéro latéral)
+      coriolisHorizMrad: null,
+      coriolisVertMrad: null,
+      ventMrad: null,
+      avanceMrad: avance(prep, R, p.t),
+      vent2: null,
+      devers: null
+    };
+    res.deriveTotaleMrad = res.deriveMrad + (res.avanceMrad || 0);
+    const cant = +prep.tir.deversDeg || 0;
+    if (cant) res.devers = effetDevers(prep, R, res.elevationMrad, res.deriveMrad, cant);
+    if (prep.aVent2) {
+      const s2 = uneSolution(prep, prep.ctxVent2, R, theta, prep.saut2, s.beta);
+      const av2 = avance(prep, R, s2.point.t);
+      res.vent2 = { elevationMrad: s2.elevation, deriveMrad: s2.derive, tempsVolS: s2.point.t,
+        sautAeroMrad: prep.saut2, avanceMrad: av2, deriveTotaleMrad: s2.derive + (av2 || 0),
+        devers: cant ? effetDevers(prep, R, s2.elevation, s2.derive, cant) : null };
+    }
+    if (decomposition) {
+      if (prep.opt.coriolis) {
+        const sc = uneSolution(prep, prep.ctxSansCoriolis, R, theta, prep.saut1, s.beta);
+        res.coriolisVertMrad = s.elevation - sc.elevation;
+      }
+      const zc = prep.avecVent ? uneSolution(prep, prep.ctxSansVent, R, theta, 0, s.beta).point.z : p.z;
+      res.coriolisHorizMrad = prep.opt.coriolis ? -(Math.atan2(zc, R) - prep.zeroCor) * 1000 : 0;
+      res.ventMrad = prep.avecVent ? -Math.atan2(p.z - zc, R) * 1000 : 0;
+    }
+    return res;
+  }
+
+  function resoudre(profil, tir, options) {
+    const prep = preparer(profil, tir, options);
+    const s = solutionPreparee(prep, tir.distanceM, prep.opt.decomposition);
+    return Object.assign(s, {
+      v0MS: prep.v0.v0,
+      v0Extrapolee: prep.v0.extrapolee,
+      v0ZeroMS: prep.v0Zero.v0,
+      tempPoudreC: prep.tempPoudreC,
+      sg: prep.sg,
+      sensibiliteSautAero: prep.sensAJ,     // mrad par m/s de vent traversier
+      cdf: prep.commun.cdf,
+      densiteKgM3: prep.rho,
+      vitesseSonMS: prep.son,
+      graviteMS2: prep.g,
+      angleZeroMrad: prep.betaZero * 1000,
+      zeroConditionsTir: !prep.zeroActif,
+      zeroLateralMrad: prep.zeroLateral * 1000   // déviation absorbée par le zéro, + = balle à droite
+    });
+  }
+
+  function table(profil, tir, distances, options) {
+    const prep = preparer(profil, tir, options);
+    return distances.map(d => {
+      try { return solutionPreparee(prep, d, false); }
+      catch (e) { return { distanceM: d, erreur: e.message }; }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Calibrations (conditions du tir = conditions du jour de la calibration)
+  // ---------------------------------------------------------------------------
+
+  // Méthode de la sécante sur un paramètre p : f(p) renvoie une solution, ecart(s) l'écart à annuler.
+  // Renvoie { p, s } ; erreur si p sort de [pMin, pMax].
+  function secante(f, ecart, p0, p1, pMin, pMax, tolerance, messageHors) {
+    let s0 = f(p0), e0 = ecart(s0), s1 = f(p1), e1 = ecart(s1);
+    for (let i = 0; i < 40; i++) {
+      if (Math.abs(e1) < tolerance) return { p: p1, s: s1 };
+      const p2 = p1 - e1 * (p1 - p0) / (e1 - e0);
+      if (!isFinite(p2) || p2 < pMin || p2 > pMax) throw new Error(messageHors);
+      p0 = p1; e0 = e1; p1 = p2; s1 = f(p1); e1 = ecart(s1);
+    }
+    throw new Error('Le calcul de calibration ne converge pas.');
+  }
+
+  // CDF : facteur unique appliqué à la traînée, de la bouche à la cible (zéro compris), tel que
+  // l'élévation calculée (sans DSF) égale l'élévation observée (mode « chute »), ou que la vitesse
+  // calculée à la cible égale la vitesse mesurée (mode « vitesse », radar Doppler par exemple).
+  // Litz recommande un premier point transsonique (Mach ≈ 1,2). Retour : CDF, Mach à la distance.
+  function calibrerCDFSelon(profil, tir, distanceM, observe, options, mode) {
+    verifier(distanceM > profil.distanceZeroM, 'CDF : la distance doit dépasser la distance de zéro.');
+    verifier(isFinite(observe), mode === 'vitesse' ? 'CDF : vitesse mesurée requise.' : 'CDF : élévation observée requise.');
+    const opts = Object.assign({}, options, { dsfActif: false, decomposition: false });
+    const t = Object.assign({}, tir, { distanceM: distanceM });
+    const f = c => resoudre(Object.assign({}, profil, { cdf: c }), t, opts);
+    const grandeur = s => mode === 'vitesse' ? s.vitesseCibleMS : s.elevationMrad;
+    const c0 = profil.cdf || 1;
+    const r = secante(f, s => grandeur(s) - observe, c0, c0 * 1.02, 0.3, 3, mode === 'vitesse' ? 1e-5 : 1e-6,
+      mode === 'vitesse' ? 'CDF : aucune valeur entre 0,3 et 3 ne donne cette vitesse à cette distance.'
+        : 'CDF : aucune valeur entre 0,3 et 3 ne reproduit cette élévation.');
+    return { cdf: r.p, cdfActuel: c0, mach: r.s.machCible, elevationMrad: r.s.elevationMrad, vitesseMS: r.s.vitesseCibleMS };
+  }
+  function calibrerCDF(profil, tir, distanceM, elevationObserveeMrad, options) {
+    return calibrerCDFSelon(profil, tir, distanceM, elevationObserveeMrad, options, 'chute');
+  }
+  function calibrerCDFVitesse(profil, tir, distanceM, vitesseMesureeMS, options) {
+    verifier(vitesseMesureeMS > 0, 'CDF : vitesse mesurée positive requise.');
+    return calibrerCDFSelon(profil, tir, distanceM, vitesseMesureeMS, options, 'vitesse');
+  }
+
+  // V0 : loi V0 décalée d'une même valeur à toutes les températures (table ou pente), de sorte que
+  // l'élévation calculée (sans DSF) égale l'élévation observée ; le zéro est recalculé avec la nouvelle
+  // V0 (même résultat qu'AB Quantum : 838,4 m/s pour 10,00 mrad à 1 000 m, carte du 2026-09-23).
+  // Distance conseillée : balle entre Mach 1,3 et 1,2 à la cible (AB Quantum) ; le manuel RAPTAR-S
+  // (§ 3.8.4) donne Mach 1,4 à 1,2.
+  function decalerV0(profil, delta) {
+    const p = Object.assign({}, profil);
+    if (profil.penteV0) p.penteV0 = Object.assign({}, profil.penteV0, { v0: profil.penteV0.v0 + delta });
+    else p.tableV0 = (profil.tableV0 || []).map(q => ({ tempC: q.tempC, v0: q.v0 + delta }));
+    return p;
+  }
+  function calibrerV0(profil, tir, distanceM, elevationObserveeMrad, options) {
+    verifier(distanceM > profil.distanceZeroM, 'V0 : la distance doit dépasser la distance de zéro.');
+    verifier(isFinite(elevationObserveeMrad), 'V0 : élévation observée requise.');
+    const opts = Object.assign({}, options, { dsfActif: false, decomposition: false });
+    const t = Object.assign({}, tir, { distanceM: distanceM });
+    const f = d => resoudre(decalerV0(profil, d), t, opts);
+    const actuelle = f(0);
+    const r = secante(f, s => s.elevationMrad - elevationObserveeMrad, 0, 5, -300, 300, 1e-6,
+      'V0 : aucune vitesse initiale plausible ne reproduit cette élévation.');
+    verifier(r.s.v0MS > 100, 'V0 : aucune vitesse initiale plausible ne reproduit cette élévation.');
+    return { v0MS: r.s.v0MS, v0ActuelleMS: actuelle.v0MS, deltaMS: r.p, tempPoudreC: r.s.tempPoudreC,
+      mach: r.s.machCible, elevationMrad: r.s.elevationMrad };
+  }
+
+  // Distances (tir à plat, conditions du tir, calibrations comprises) où la balle arrive à la cible aux
+  // Mach demandés. Sert aux distances conseillées : V0 entre Mach 1,3 et 1,2, DSF sous Mach 0,9
+  // (AB Quantum). Renvoie une distance (m) par Mach, ou null au-delà de distanceMaxM.
+  function distancesMach(profil, tir, machs, options) {
+    const opts = Object.assign({ dt: 0.002 }, options, { coriolis: false, decomposition: false });
+    const dMax = opts.distanceMaxM || 3000;
+    const prep = preparer(profil, Object.assign({}, tir, { siteDeg: 0, vent: null, ventZone: null, cible: null,
+      deversDeg: null, distanceM: 100 }), opts);
+    let beta = prep.betaZero;
+    const machA = R => {
+      const sol = resoudreAngle(prep.ctx, R, 0, beta);
+      beta = sol.beta;
+      const p = sol.point, v = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+      return v / (prep.ctx.a0Son * Math.sqrt((prep.ctx.TK0 - GRADIENT_T * p.y) / 273.15));
+    };
+    const cibles = machs.map((m, i) => ({ m: m, i: i })).sort((a, b) => b.m - a.m);
+    const res = machs.map(() => null);
+    let Ra = 50, ma = machA(Ra);
+    for (const c of cibles) {
+      if (ma < c.m) continue; // déjà plus lent à 50 m
+      let Rb = Ra, mb = ma;
+      while (mb >= c.m && Rb < dMax) { Ra = Rb; ma = mb; Rb = Math.min(Rb + 50, dMax); try { mb = machA(Rb); } catch (e) { mb = -1; break; } }
+      if (mb >= c.m || mb < 0) break;
+      let lo = Ra, mlo = ma, hi = Rb, mhi = mb; // interpolation linéaire en Mach, deux fois affinée
+      for (let k = 0; k < 3; k++) {
+        const Rm = lo + (c.m - mlo) * (hi - lo) / (mhi - mlo), mm = machA(Rm);
+        if (mm >= c.m) { lo = Rm; mlo = mm; } else { hi = Rm; mhi = mm; }
+      }
+      res[c.i] = lo + (c.m - mlo) * (hi - lo) / (mhi - mlo);
+    }
+    return res;
+  }
+
+  // DSF : rapport entre l'élévation observée et l'élévation calculée sans DSF (saut aérodynamique
+  // retiré des deux), stocké avec le Mach de la balle à cette distance.
+  function calibrerDSF(profil, tir, distanceM, elevationObserveeMrad, options) {
+    verifier(isFinite(elevationObserveeMrad), 'DSF : élévation observée requise.');
+    const opts = Object.assign({}, options, { dsfActif: false, decomposition: false });
+    const s = resoudre(profil, Object.assign({}, tir, { distanceM: distanceM }), opts);
+    verifier(s.elevationBruteMrad > 0.5, 'DSF : distance trop courte (élévation calculée inférieure à 0,5 mrad).');
+    return { mach: s.machCible, dsf: (elevationObserveeMrad - s.sautAeroMrad) / s.elevationBruteMrad,
+      elevationCalculeeMrad: s.elevationMrad };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Aides de tir : speed drop, quick wind, wind dot (tir à plat, sans vent ni Coriolis,
+  // atmosphère du tir, DSF appliqué). Courbe calculée tous les 10 m.
+  // ---------------------------------------------------------------------------
+
+  function aidesTir(profil, tir, options) {
+    const opts = Object.assign({ dt: 0.002 }, options, { coriolis: false, decomposition: false });
+    const toleranceSD = opts.toleranceSpeedDropMrad || 0.1;
+    const dMax = opts.distanceMaxAidesM || 1500;
+    const tirPlat = Object.assign({}, tir, { siteDeg: 0, vent: null, ventZone: null, cible: null, deversDeg: null, distanceM: 100 });
+    const prep = preparer(profil, tirPlat, opts);
+    const ctxVent1 = contexte(prep.v0.v0, prep.atmo, prep.commun, null, vecteurVent(1, 9));
+    const pts = [];
+    let beta = prep.betaZero;
+    for (let R = 50; R <= dMax + 1e-9; R += 10) {
+      let sol;
+      try { sol = resoudreAngle(prep.ctx, R, 0, beta); } catch (e) { break; }
+      beta = sol.beta;
+      const p = sol.point;
+      const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+      const mach = v / (prep.ctx.a0Son * Math.sqrt((prep.ctx.TK0 - GRADIENT_T * p.y) / 273.15));
+      const E = (sol.beta - prep.betaZero) * 1000 * facteurDSF(profil.dsf, mach);
+      const pv = tracer(ctxVent1, sol.beta, R);
+      pts.push({ R: R, E: E, mach: mach, beta: sol.beta, d1: pv ? Math.atan2(pv.z, R) * 1000 : NaN });
+      if (mach < 1.1 && E > 4) break; // au-delà, aucune des trois aides n'est utilisée
+    }
+    const res = { speedDrop: null, quickWind: null, windDot: null };
+    if (pts.length < 3) return res;
+
+    // Speed drop : correction ≈ distance/100 − SD (mrad, distance en m). SD = maximum de
+    // (distance/100 − élévation) moins la tolérance, arrondi au 0,1 mrad le plus proche (x,x5 vers le bas) ;
+    // plage contiguë où l'écart, arrondi au 0,1 mrad, reste dans la tolérance (|écart| ≤ tolérance + 0,05).
+    // Règle qui reproduit les valeurs du Kestrel de l'auteur (2026-09-23) aux écarts de modèle près.
+    const sdv = pts.map(q => q.R / 100 - q.E);
+    let iMax = 0;
+    sdv.forEach((x, i) => { if (x > sdv[iMax]) iMax = i; });
+    let prime = sdv[iMax];
+    if (iMax > 0 && iMax < pts.length - 1) { // sommet de la parabole par les trois points voisins
+      const a = sdv[iMax - 1], b = sdv[iMax], c = sdv[iMax + 1], den = a - 2 * b + c;
+      if (den < 0) prime = b - (a - c) * (a - c) / (8 * den);
+    }
+    const sdBrut = prime - toleranceSD;
+    const sd = Math.ceil(sdBrut * 10 - 0.5 - 1e-9) / 10;
+    const seuil = sd - toleranceSD - 0.05;
+    let i0 = iMax, i1 = iMax;
+    while (i0 > 0 && sdv[i0 - 1] >= seuil) i0--;
+    while (i1 < pts.length - 1 && sdv[i1 + 1] >= seuil) i1++;
+    const croise = (a, b) => pts[a].R + (seuil - sdv[a]) * (pts[b].R - pts[a].R) / (sdv[b] - sdv[a]);
+    res.speedDrop = {
+      valeurMrad: sd,
+      valeurBruteMrad: sdBrut,
+      toleranceMrad: toleranceSD,
+      distanceMinM: i0 > 0 ? croise(i0 - 1, i0) : pts[0].R,
+      distanceMaxM: i1 < pts.length - 1 ? croise(i1, i1 + 1) : pts[pts.length - 1].R,
+      borneAtteinte: i0 === 0 || i1 === pts.length - 1
+    };
+
+    // Quick wind (Accuracy 1st, « Short Wind Formula ») : vent traversier plein W qui donne 0,5 mrad de
+    // dérive due au vent à 500 m, dérive gyroscopique et Coriolis exclus. Pour un vent égal à n × W, la
+    // correction vaut n × distance/1000 ; « valeurs de distance » : correction exacte pour W tous les 100 m.
+    const R500 = 500;
+    const k500 = pts.findIndex(q => Math.abs(q.R - R500) < 1e-6);
+    if (k500 >= 0 && pts[k500].d1 > 0) {
+      const b500 = pts[k500].beta;
+      const derive = (W, R, beta) => {
+        const pv = tracer(contexte(prep.v0.v0, prep.atmo, prep.commun, null, vecteurVent(W, 9)), beta, R);
+        return pv ? Math.atan2(pv.z, R) * 1000 : NaN;
+      };
+      let W = 0.5 / pts[k500].d1;
+      for (let k = 0; k < 4; k++) W *= 0.5 / derive(W, R500, b500);
+      const valeurs = [];
+      for (const q of pts) {
+        if (q.R % 100 === 0 && q.R <= 1000) valeurs.push({ distanceM: q.R, mrad: derive(W, q.R, q.beta), mach: q.mach });
+      }
+      res.quickWind = { vitesseMS: W, mph: W / MPH_EN_MS, mphEntier: Math.round(W / MPH_EN_MS), distanceRefM: R500,
+        valeursDistance: valeurs };
+    }
+
+    // Wind dot (réticules Tremor, méthode Horus) : à la distance où l'élévation vaut 4 mrad, vent
+    // traversier plein donnant 0,95 mrad de dérive due au vent (2e point de la ligne 4 mrad) ; la
+    // valeur d'un point est la moitié de ce vent.
+    const j = pts.findIndex((q, k) => k > 0 && pts[k - 1].E < 4 && q.E >= 4);
+    if (j > 0) {
+      const a = pts[j - 1], b = pts[j];
+      const R4 = a.R + (4 - a.E) * (b.R - a.R) / (b.E - a.E);
+      const sol4 = resoudreAngle(prep.ctx, R4, 0, a.beta);
+      let W = 0.95 / (a.d1 + (R4 - a.R) * (b.d1 - a.d1) / (b.R - a.R));
+      for (let k = 0; k < 3; k++) {
+        const pv = tracer(contexte(prep.v0.v0, prep.atmo, prep.commun, null, vecteurVent(W, 9)), sol4.beta, R4);
+        W *= 0.95 / (Math.atan2(pv.z, R4) * 1000);
+      }
+      res.windDot = { vitesseMS: W / 2, vent2ePointMS: W, distanceM: R4 };
+    }
+    return res;
+  }
+
+  // ---------------------------------------------------------------------------
+  // WEZ (Weapon Employment Zone) : probabilité de toucher au premier coup
+  // ---------------------------------------------------------------------------
+  // Méthode : pour chaque source d'incertitude, le solveur calcule l'écart de correction (élévation, dérive)
+  // produit par un écart d'une unité, à toutes les distances (différences finies). L'impact suit alors une loi
+  // normale à deux dimensions, somme des contributions indépendantes et de la dispersion du fusil ; la
+  // probabilité de toucher est estimée par nTirs tirs simulés (Monte Carlo, graine fixe) sur la cible, centrée
+  // sur le point visé. Valable tant que les incertitudes restent petites devant les grandeurs (modèle linéaire).
+  // incertitudes : écarts-types (1σ) : fusilMrad (dispersion par axe), v0MS, traineePct, distanceM, tempC
+  //   (température de l'air seule, V0 inchangée), pressionHPa, humiditePct, siteDeg, latitudeDeg, azimutDeg, ventMS
+  //   (vitesse du vent, dans la direction saisie : voir ajouterVentDirection).
+  // Le zéro de l'arme reste celui du tir nominal pour toutes les variations (option zeroFixe de preparer).
+  // Conventions vérifiées sur l'écran WEZ d'AB Quantum de l'auteur (2026-09-23, 1 000 m, vent 3 m/s de 3 h : 17 %) :
+  // entrées en écart-type ; contributions par source retrouvées (vent, pression, humidité, V0, traînée, température).
+  // cible : { forme: 'rectangle' | 'cercle', largeurM, hauteurM, diametreM }.
+  // Retour : une entrée par distance { distanceM, pTouche, sigmaVMrad, sigmaHMrad, correlation,
+  //   contributions: [{ source, vMrad, hMrad }] } ; option impactsDistanceM : renvoie aussi, pour cette
+  //   distance, les impacts simulés (m, x vers la droite, y vers le haut ; les nImpacts premiers).
+  const SOURCES_WEZ = ['v0', 'trainee', 'distance', 'temp', 'pression', 'humidite', 'site', 'latitude', 'azimut', 'vent'];
+  function aleaNormal(graine) { // générateur déterministe (mulberry32) et Box-Muller
+    let a = graine >>> 0;
+    const u = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return (((t ^ (t >>> 14)) >>> 0) + 0.5) / 4294967296; };
+    return () => { const r = Math.sqrt(-2 * Math.log(u())), th = 2 * Math.PI * u(); return [r * Math.cos(th), r * Math.sin(th)]; };
+  }
+  // Incertitude de vent (convention d'AB Quantum) : elle porte sur la vitesse du vent, dans la direction saisie
+  // (vent 1 et vent à distance, chacun dans sa direction). Sans vent saisi, vent traversier venant de 9 h.
+  // Vérifié sur la colonne P(hit) des range cards d'AB Quantum de l'auteur (vent 0 m/s de 12 h : l'incertitude
+  // de 2 m/s y agit comme un vent de face ou arrière et ne disperse presque pas latéralement).
+  function ajouterVentDirection(tir, dW) {
+    const t = Object.assign({}, tir);
+    const v = tir.vent || { vitesse1MS: 0, vitesse2MS: null, directionHeures: 9 };
+    t.vent = { vitesse1MS: (+v.vitesse1MS || 0) + dW, vitesse2MS: null, directionHeures: v.directionHeures };
+    if (tir.ventZone) t.ventZone = Object.assign({}, tir.ventZone, { vitesseMS: (+tir.ventZone.vitesseMS || 0) + dW });
+    return t;
+  }
+  function wez(profil, tir, distances, incertitudes, cible, options) {
+    // Pas de 4 ms : les sensibilités sont des différences, identiques à 0,001 près à celles du pas de 2 ms.
+    const opts0 = Object.assign({ dt: 0.004 }, options, { decomposition: false });
+    const nTirs = opts0.nTirs || 20000;
+    const u = incertitudes || {};
+    // Zéro de l'arme : celui du tir nominal, commun à toutes les variations.
+    const p0 = preparer(profil, Object.assign({}, tir, { deversDeg: null, cible: null }), opts0);
+    const opts = Object.assign({}, opts0, { zeroFixe: { betaZero: p0.betaZero, zeroGyro: p0.zeroGyro, zeroCor: p0.zeroCor } });
+    // Dévers et cible mobile hors WEZ : seules comptent les corrections affichées.
+    const tab = (p, t, d) => table(p, Object.assign({}, t || tir, { deversDeg: null, cible: null }), d || distances, opts);
+    const base = tab(profil, tir);
+    const plus = (champ, pas) => Object.assign({}, tir, { [champ]: tir[champ] + pas });
+    const variantes = {
+      v0: [u.v0MS, () => tab(decalerV0(profil, 1))],
+      trainee: [u.traineePct, () => tab(Object.assign({}, profil, { cdf: (profil.cdf || 1) * 1.01 }))],
+      distance: [u.distanceM, () => tab(profil, tir, distances.map(d => d + 1))],
+      temp: [u.tempC, () => tab(profil, Object.assign(plus('tempC', 1), { tempPoudreC: p0.tempPoudreC }))],
+      pression: [u.pressionHPa, () => tab(profil, plus('pressionHPa', 1))],
+      humidite: [u.humiditePct, () => tab(profil, plus('humiditePct', tir.humiditePct >= 99 ? -1 : 1))],
+      site: [u.siteDeg, () => { const a = tab(profil, plus('siteDeg', 0.5)), b = tab(profil, plus('siteDeg', -0.5));
+        return a.map((s, i) => ({ elevationMrad: base[i].elevationMrad + (s.elevationMrad - b[i].elevationMrad),
+          deriveMrad: base[i].deriveMrad + (s.deriveMrad - b[i].deriveMrad) })); }],
+      latitude: [u.latitudeDeg, () => tab(profil, Object.assign({}, tir, { latitudeDeg: tir.latitudeDeg + (tir.latitudeDeg > 89 ? -1 : 1) }))],
+      azimut: [u.azimutDeg, () => tab(profil, plus('azimutDeg', 1))],
+      vent: [u.ventMS, () => tab(profil, ajouterVentDirection(tir, 1))]
+    };
+    const sens = {};
+    for (const s of SOURCES_WEZ) {
+      const [sigma, calc] = variantes[s];
+      if (!(sigma > 0)) continue;
+      const t = calc();
+      sens[s] = { sigma: sigma, d: t.map((x, i) => (x.erreur || base[i].erreur) ? null
+        : [x.elevationMrad - base[i].elevationMrad, x.deriveMrad - base[i].deriveMrad]) };
+    }
+    const alea = aleaNormal(opts.graine || 20260923);
+    const normales = [];
+    for (let k = 0; k < nTirs; k++) normales.push(alea());
+    const sf = u.fusilMrad > 0 ? u.fusilMrad : 0;
+    return distances.map((R, i) => {
+      if (base[i].erreur) return { distanceM: R, erreur: base[i].erreur };
+      let vv = sf * sf, hh = sf * sf, vh = 0;
+      const contributions = [];
+      for (const s of Object.keys(sens)) {
+        const d = sens[s].d[i];
+        if (!d) continue;
+        const a = d[0] * sens[s].sigma, b = d[1] * sens[s].sigma;
+        vv += a * a; hh += b * b; vh += a * b;
+        contributions.push({ source: s, vMrad: Math.abs(a), hMrad: Math.abs(b) });
+      }
+      if (sf > 0) contributions.push({ source: 'fusil', vMrad: sf, hMrad: sf });
+      // Cholesky de [[hh, vh], [vh, vv]] (x latéral, y vertical), impacts en mètres à la distance R.
+      const l11 = Math.sqrt(hh), l21 = l11 > 0 ? vh / l11 : 0, l22 = Math.sqrt(Math.max(vv - l21 * l21, 0));
+      const k = R / 1000;
+      const dedans = cible && cible.forme === 'cercle'
+        ? (x, y) => x * x + y * y <= Math.pow(cible.diametreM / 2, 2)
+        : (x, y) => Math.abs(x) <= cible.largeurM / 2 && Math.abs(y) <= cible.hauteurM / 2;
+      let touches = 0;
+      const garder = opts.impactsDistanceM !== undefined && Math.abs(R - opts.impactsDistanceM) < 1e-6;
+      const impacts = garder ? [] : null;
+      for (let n = 0; n < nTirs; n++) {
+        const z = normales[n], x = l11 * z[0] * k, y = (l21 * z[0] + l22 * z[1]) * k;
+        if (dedans(x, y)) touches++;
+        if (garder && n < (opts.nImpacts || 400)) impacts.push([x, y]);
+      }
+      const r = { distanceM: R, pTouche: touches / nTirs, sigmaVMrad: Math.sqrt(vv), sigmaHMrad: Math.sqrt(hh),
+        correlation: (vv > 0 && hh > 0) ? vh / Math.sqrt(vv * hh) : 0, contributions: contributions };
+      if (impacts) r.impacts = impacts;
+      return r;
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reconstruction d'une table de traînée à partir d'une range card
+  // ---------------------------------------------------------------------------
+  // La range card d'un autre logiciel calculée avec un modèle de traînée personnalisé (CDM d'Applied
+  // Ballistics par exemple) contient, distance par distance, la vitesse et l'élévation que donne ce modèle.
+  // On cherche Cd(M) = i·Cd_G7(M)·f(M), f linéaire par morceaux entre des nœuds en Mach, telle que le solveur
+  // retrouve ces vitesses (poids 1/0,05 m/s) et ces élévations (poids 1/0,005 mrad) ; faible pénalité (lissage) sur la
+  // courbure de f ; Gauss-Newton amorti (Levenberg-Marquardt), jacobien par différences finies.
+  // profil : profil de l'arme qui a servi à la carte (V0, zéro, entraxe…) ; son BC G7 fixe i (densité de section
+  // / BC), point de départ de f = 1. tir : conditions de la carte. carte : [{ distanceM, elevationMrad, vitesseMS }]
+  // (au plus 40 points utilisés, répartis sur la carte). Retour : table [{ mach, cd }] (grille G7), nœuds,
+  // facteurs, écarts maximaux à la carte (élévation, vitesse).
+  const NOEUDS_TRAINEE = [0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2, 1.3, 1.45, 1.6, 1.8, 2.0, 2.2, 2.5];
+  function reconstruireTrainee(profil, tir, carte, options) {
+    const opts = Object.assign({ dt: 0.001, iterations: 25, lissage: 100 }, options);
+    const pts0 = (carte || []).filter(q => q.distanceM > 0 && q.vitesseMS > 0 && isFinite(q.elevationMrad));
+    verifier(pts0.length >= 5, 'Range card : au moins cinq distances avec vitesse et élévation.');
+    const pas = Math.max(1, Math.ceil(pts0.length / 40));
+    const pts = pts0.filter((q, k) => k % pas === 0 || k === pts0.length - 1);
+    const dist = pts.map(q => q.distanceM);
+    const SD = (profil.masseGrains / 7000) / Math.pow(profil.diametreM / POUCE, 2);
+    const i = SD / (profil.bcG7 > 0 ? profil.bcG7 : 0.3);
+    const N = NOEUDS_TRAINEE;
+    const f = (M, p) => {
+      if (M <= N[0]) return p[0];
+      for (let k = 1; k < N.length; k++) if (M <= N[k]) return p[k - 1] + (M - N[k - 1]) * (p[k] - p[k - 1]) / (N[k] - N[k - 1]);
+      return p[p.length - 1];
+    };
+    const tableDe = p => G7_MACH.map((M, k) => ({ mach: M, cd: i * G7_CD[k] * f(M, p) }));
+    const base = Object.assign({}, profil, { cdf: 1, dsf: [], bcG7: null });
+    const profilDe = p => Object.assign({}, base, { traineePerso: tableDe(p) });
+    const optT = { decomposition: false, deriveGyro: false, dsfActif: false, dt: opts.dt };
+    const zeroEnDistance = pts[0].distanceM <= profil.distanceZeroM + 1e-9;
+    const residus = p => {
+      const t = table(profilDe(p), tir, dist, optT), r = [];
+      for (let k = 0; k < t.length; k++) {
+        if (t[k].erreur) { r.push(1e4); r.push(1e4); continue; }
+        r.push((t[k].vitesseCibleMS - pts[k].vitesseMS) * 20);
+        if (!(zeroEnDistance && k === 0)) r.push((t[k].elevationMrad - pts[k].elevationMrad) * 200);
+      }
+      for (let k = 1; k < p.length - 1; k++) r.push(opts.lissage * (p[k - 1] - 2 * p[k] + p[k + 1]));
+      return r;
+    };
+    const somme = r => r.reduce((a, x) => a + x * x, 0);
+    const lineaire = (A, b) => {
+      const n = b.length, M = A.map((l, a) => l.concat([b[a]]));
+      for (let c = 0; c < n; c++) {
+        let pm = c; for (let l = c + 1; l < n; l++) if (Math.abs(M[l][c]) > Math.abs(M[pm][c])) pm = l;
+        const tmp = M[c]; M[c] = M[pm]; M[pm] = tmp;
+        for (let l = c + 1; l < n; l++) { const q = M[l][c] / M[c][c]; for (let k = c; k <= n; k++) M[l][k] -= q * M[c][k]; }
+      }
+      const x = new Array(n).fill(0);
+      for (let l = n - 1; l >= 0; l--) { let s = M[l][n]; for (let k = l + 1; k < n; k++) s -= M[l][k] * x[k]; x[l] = s / M[l][l]; }
+      return x;
+    };
+    let p = N.map(() => 1), r = residus(p), cout = somme(r), mu = 1e-2;
+    for (let it = 0; it < opts.iterations; it++) {
+      const J = p.map((_, j) => { const q = p.slice(); q[j] += 0.002; return residus(q).map((x, k) => (x - r[k]) / 0.002); });
+      const n = p.length, A = [], g = [];
+      for (let a = 0; a < n; a++) {
+        A.push([]); g.push(-J[a].reduce((s, x, k) => s + x * r[k], 0));
+        for (let b = 0; b < n; b++) A[a].push(J[a].reduce((s, x, k) => s + x * J[b][k], 0));
+      }
+      let progres = false, fin = false;
+      for (let essai = 0; essai < 8 && !progres; essai++) {
+        const dp = lineaire(A.map((l, a) => l.map((x, b) => a === b ? x * (1 + mu) : x)), g);
+        const q = p.map((x, k) => Math.min(Math.max(x + dp[k], 0.3), 3));
+        const rq = residus(q), cq = somme(rq);
+        if (cq < cout) { fin = (cout - cq) < 1e-4 * cout; p = q; r = rq; cout = cq; mu = Math.max(mu / 3, 1e-6); progres = true; }
+        else mu *= 5;
+      }
+      if (!progres || fin) break;
+    }
+    const verif = table(profilDe(p), tir, pts0.map(q => q.distanceM), optT);
+    let eE = 0, eV = 0;
+    verif.forEach((s, k) => { if (s.erreur) return; eE = Math.max(eE, Math.abs(s.elevationMrad - pts0[k].elevationMrad));
+      eV = Math.max(eV, Math.abs(s.vitesseCibleMS - pts0[k].vitesseMS)); });
+    return { table: tableDe(p), noeuds: N.slice(), facteurs: p, ecartElevationMaxMrad: eE, ecartVitesseMaxMS: eV,
+      distanceMaxM: pts0[pts0.length - 1].distanceM, points: pts.length };
+  }
+
+  return {
+    VERSION: VERSION,
+    resoudre: resoudre,
+    table: table,
+    preparer: preparer,
+    solutionPreparee: solutionPreparee,
+    calibrerCDF: calibrerCDF,
+    calibrerCDFVitesse: calibrerCDFVitesse,
+    calibrerV0: calibrerV0,
+    calibrerDSF: calibrerDSF,
+    decalerV0: decalerV0,
+    distancesMach: distancesMach,
+    effetDevers: effetDevers,
+    aidesTir: aidesTir,
+    wez: wez,
+    reconstruireTrainee: reconstruireTrainee,
+    ajouterVentDirection: ajouterVentDirection,
+    vitesseInitiale: vitesseInitiale,
+    loiV0: loiV0,
+    stabiliteMiller: stabiliteMiller,
+    deriveGyroscopique: deriveGyroscopique,
+    sensibiliteSautAero: sensibiliteSautAero,
+    vecteurVent: vecteurVent,
+    facteurDSF: facteurDSF,
+    densiteAir: densiteAir,
+    vitesseSon: vitesseSon,
+    graviteNormale: graviteNormale,
+    cdG7: cdG7,
+    pchipPreparer: pchipPreparer,
+    tracer: tracer,
+    contexte: contexte,
+    resoudreAngle: resoudreAngle,
+    constantes: { OMEGA_TERRE: OMEGA_TERRE, EXPOSANT_P: EXPOSANT_P, GRADIENT_T: GRADIENT_T,
+      LB_PAR_IN2: LB_PAR_IN2, G7_MACH: G7_MACH, G7_CD: G7_CD }
+  };
+});
+</script>
+<script>
+(function () {
+  'use strict';
+  const S = () => window.Solveur;
+  const CLE = 'wmlrf-balistique-v3';
+  const CLE_V2 = 'wmlrf-balistique-v2';
+  const CLE_V1 = 'wmlrf-balistique-v1';
+  const CLE_V0 = 'wmlrf-balistique-v0';
+  const POUCE = 0.0254;
+  const MOINS = '−';
+  // Profil d'exemple : 6,5 Creedmoor, Hornady 147 gr ELD Match de l'auteur, conditions de ses range cards
+  // AB Quantum du 2026-09-23 (1 000 m donne 10,60 ↑ et L 0,32 chez AB Quantum).
+  const EXEMPLE = {
+    't-distance': '1000', 't-site': '0', 't-azimut': '0', 't-latitude': '43',
+    't-temp': '15', 't-poudre': '', 't-pression': '1013', 't-humidite': '50',
+    'v-1': '', 'v-2': '', 'v-dir': '12', 'vz-distance': '', 'vz-vitesse': '', 'vz-dir': '9',
+    'c-vitesse-kmh': '', 'c-angle': '90', 't-devers': '',
+    'v0-t1': '-45', 'v0-v1': '802', 'v0-t2': '17', 'v0-v2': '819', 'v0-t3': '60', 'v0-v3': '831',
+    'v0p-v': '819', 'v0p-t': '17', 'v0p-pente': '0,27',
+    'p-bc': '0,309', 'p-poids': '147', 'p-diametre': '6,71', 'p-longueur': '36,4', 'p-pas': '190,5',
+    'p-entraxe': '66,5', 'p-zero': '100',
+    'z-temp': '15', 'z-pression': '1013', 'z-humidite': '0',
+    'k-cdf': '1', 'k-dist': '', 'k-elev': '', 'k-vit': '',
+    'dsf-m1': '1,2', 'dsf-f1': '1', 'dsf-m2': '', 'dsf-f2': '', 'dsf-m3': '', 'dsf-f3': '',
+    'dsf-m4': '', 'dsf-f4': '', 'dsf-m5': '', 'dsf-f5': '', 'dsf-m6': '', 'dsf-f6': '',
+    'trainee-json': '',
+    // WEZ : réglages de l'écran WEZ d'AB Quantum de l'auteur (2026-09-23) ; cible à saisir.
+    'w-largeur': '50', 'w-hauteur': '50', 'w-diametre': '50', 'w-fusil': '0,2', 'w-v0': '2,9', 'w-trainee': '1',
+    'w-distance': '2', 'w-vent': '2', 'w-temp': '1', 'w-pression': '2', 'w-humidite': '3', 'w-site': '1',
+    'w-latitude': '0', 'w-azimut': '10',
+    'rc-debut': '100', 'rc-fin': '2000', 'rc-pas': '100',
+    unite: 'mm', sens: 'droite', modev0: 'table', senscible: 'droite', tolsd: '0.1',
+    zeroactif: 'oui', ktype: 'v0', kmode: 'chute', sensdevers: 'droite', trainee: 'g7',
+    formecible: 'rectangle', unitefusil: 'mrad'
+  };
+  const RADIOS = ['unite', 'sens', 'modev0', 'senscible', 'tolsd', 'zeroactif', 'ktype', 'kmode', 'sensdevers', 'trainee',
+    'formecible', 'unitefusil'];
+  const CHAMPS_CALIBRATION = ['k-dist', 'k-elev', 'k-vit'];
+  const MOA_EN_MRAD = Math.PI / 10.8;
+  const IDS = Object.keys(EXEMPLE).filter(k => RADIOS.indexOf(k) < 0);
+  const $ = id => document.getElementById(id);
+  let uniteCourante = 'in';
+
+  function fmt(n, d) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function fmtSigne(n, d) {
+    const a = fmt(Math.abs(n), d);
+    if (Number(Math.abs(n).toFixed(d)) === 0) return a;
+    return (n < 0 ? MOINS : '+') + a;
+  }
+  function fmtSaisie(n, dec) {
+    return n.toFixed(dec).replace(/\.?0+$/, '').replace('.', ',');
+  }
+  function lateral(v, d) { // correction : + = droite (R), − = gauche (L)
+    const a = fmt(Math.abs(v), d);
+    if (Number(Math.abs(v).toFixed(d)) === 0) return a;
+    return (v < 0 ? 'L ' : 'R ') + a;
+  }
+  function hausse(v, d) { // élévation avec flèche
+    const a = fmt(Math.abs(v), d);
+    if (Number(Math.abs(v).toFixed(d)) === 0) return a;
+    return a + (v > 0 ? ' ↑' : ' ↓');
+  }
+  function radio(nom) {
+    const el = document.querySelector('input[name="' + nom + '"]:checked');
+    return el ? el.value : null;
+  }
+  function cocher(nom, valeur) {
+    const el = document.querySelector('input[name="' + nom + '"][value="' + valeur + '"]');
+    if (el) el.checked = true;
+  }
+
+  // ----- état du formulaire -----
+  function lireEtat() {
+    const e = {};
+    IDS.forEach(id => { e[id] = $(id).value; });
+    RADIOS.forEach(n => { e[n] = radio(n); });
+    return e;
+  }
+  function ecrireEtat(e) {
+    IDS.forEach(id => { $(id).value = e[id] !== undefined && e[id] !== null ? e[id] : ''; });
+    RADIOS.forEach(n => cocher(n, e[n] !== undefined && e[n] !== null ? e[n] : EXEMPLE[n]));
+    uniteCourante = radio('unite') === 'mm' ? 'mm' : 'in';
+    majLibellesUnite();
+    majModeV0();
+    majZero();
+    majTypeCalibration();
+    majTrainee();
+    majFormeCible();
+  }
+  function sauver() {
+    try { localStorage.setItem(CLE, JSON.stringify(lireEtat())); } catch (e) { /* stockage indisponible */ }
+  }
+  function charger(cle) {
+    try { const t = localStorage.getItem(cle); return t ? JSON.parse(t) : null; } catch (e) { return null; }
+  }
+  // État de la version 0.2 : vitesse de cible en m/s convertie en km/h, anciens champs de calibration
+  // abandonnés, pas remis à droite (demande de l'auteur du 2026-09-23).
+  function migrerV0(e) {
+    const m = Object.assign({}, e);
+    const vc = String(e['c-vitesse'] || '').trim().replace(',', '.');
+    m['c-vitesse-kmh'] = vc !== '' && isFinite(Number(vc)) ? fmtSaisie(Number(vc) * 3.6, 1) : '';
+    ['c-vitesse', 'k-cdf-dist', 'k-cdf-elev', 'k-dsf-dist', 'k-dsf-elev'].forEach(k => { delete m[k]; });
+    m.sens = 'droite';
+    return m;
+  }
+  function majZero() {
+    const non = radio('zeroactif') === 'non';
+    $('champs-zero').hidden = non;
+    $('zero-inactif').hidden = !non;
+  }
+  function tableImportee() {
+    const t = $('trainee-json').value;
+    if (!t) return null;
+    try { const o = JSON.parse(t); return o && Array.isArray(o.table) && o.table.length > 1 ? o : null; } catch (e) { return null; }
+  }
+  function majTrainee() {
+    const o = tableImportee(), mode = radio('trainee');
+    let texte;
+    if (mode === 'table') {
+      texte = o ? 'Table importée : ' + o.source + ' (' + o.date + ') ; écart à la carte : ' + fmt(o.ecartElevationMaxMrad, 3)
+        + ' mrad en élévation, ' + fmt(o.ecartVitesseMaxMS, 1) + ' m/s en vitesse, jusqu\'à ' + fmt(o.distanceMaxM, 0) + ' m. Le BC G7 n\'est pas utilisé.'
+        : 'Aucune table importée : importez une range card CDM.';
+    } else {
+      texte = o ? 'G7 BC. Table importée en réserve : ' + o.source + '.' : 'G7 BC.';
+    }
+    $('trainee-etat').textContent = texte;
+  }
+  function majFormeCible() {
+    const cercle = radio('formecible') === 'cercle';
+    $('ch-w-largeur').hidden = cercle;
+    $('ch-w-hauteur').hidden = cercle;
+    $('ch-w-diametre').hidden = !cercle;
+    $('w-fusil-unite').textContent = radio('unitefusil') === 'moa' ? 'MOA' : 'mrad';
+  }
+  function majLibellesUnite() {
+    document.querySelectorAll('.u-balle').forEach(el => { el.textContent = uniteCourante; });
+    document.querySelector('.u-balle-pas').textContent = uniteCourante + '/tour';
+  }
+  function majModeV0() {
+    const m = radio('modev0');
+    $('bloc-v0-table').hidden = m === 'pente';
+    $('bloc-v0-pente').hidden = m !== 'pente';
+  }
+  function convertirUnites(vers) {
+    if (vers === uniteCourante) return;
+    ['p-diametre', 'p-longueur', 'p-pas'].forEach(id => {
+      const el = $(id);
+      const brut = el.value.trim().replace(',', '.');
+      const n = Number(brut);
+      if (brut === '' || !isFinite(n)) return;
+      el.value = vers === 'mm' ? fmtSaisie(n * 25.4, 3) : fmtSaisie(n / 25.4, 4);
+    });
+    uniteCourante = vers;
+    majLibellesUnite();
+  }
+
+  // ----- lecture et contrôle -----
+  function ErreurChamp(el, message) { this.el = el; this.message = message; }
+  function nombre(id, facultatif) {
+    const el = $(id);
+    const brut = el.value.trim().replace(/−/g, '-').replace(/[\s  ]/g, '').replace(',', '.');
+    if (brut === '') {
+      if (facultatif) return null;
+      throw new ErreurChamp(el, 'valeur requise');
+    }
+    if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(brut)) throw new ErreurChamp(el, 'nombre invalide');
+    return Number(brut);
+  }
+  function lireProfil(pourImport) { // pourImport : profil sans table de traînée, BC facultatif
+    const versM = v => uniteCourante === 'in' ? v * POUCE : v / 1000;
+    const modeTable = !pourImport && radio('trainee') === 'table';
+    const profil = {
+      bcG7: nombre('p-bc', modeTable || !!pourImport),
+      masseGrains: nombre('p-poids'),
+      diametreM: versM(nombre('p-diametre')),
+      longueurM: versM(nombre('p-longueur')),
+      pasM: versM(nombre('p-pas')),
+      pasSens: radio('sens') === 'gauche' ? -1 : 1,
+      hauteurViseurM: nombre('p-entraxe') / 1000,
+      distanceZeroM: nombre('p-zero'),
+      zero: radio('zeroactif') === 'non' ? null
+        : { tempC: nombre('z-temp'), pressionHPa: nombre('z-pression'), humiditePct: nombre('z-humidite') },
+      tableV0: []
+    };
+    if (radio('modev0') === 'pente') {
+      profil.penteV0 = { v0: nombre('v0p-v'), tempC: nombre('v0p-t'), penteMSparC: nombre('v0p-pente') };
+    } else {
+      for (let i = 1; i <= 3; i++) {
+        const t = nombre('v0-t' + i, true), v = nombre('v0-v' + i, true);
+        if (t === null && v === null) continue;
+        if (t === null) throw new ErreurChamp($('v0-t' + i), 'température manquante');
+        if (v === null) throw new ErreurChamp($('v0-v' + i), 'vitesse manquante');
+        profil.tableV0.push({ tempC: t, v0: v });
+      }
+      if (!profil.tableV0.length) throw new ErreurChamp($('v0-t1'), 'au moins un point requis');
+    }
+    if (modeTable) {
+      const o = tableImportee();
+      if (!o) throw new Error('Traînée : aucune table importée ; importez une range card CDM ou revenez au G7.');
+      profil.traineePerso = o.table;
+    }
+    const cdf = nombre('k-cdf', true);
+    profil.cdf = cdf === null ? 1 : cdf;
+    profil.dsf = [];
+    for (let i = 1; i <= 6; i++) {
+      const m = nombre('dsf-m' + i, true), f = nombre('dsf-f' + i, true);
+      if (m === null && f === null) continue;
+      if (m === null) throw new ErreurChamp($('dsf-m' + i), 'Mach manquant');
+      if (f === null) throw new ErreurChamp($('dsf-f' + i), 'DSF manquant');
+      profil.dsf.push({ mach: m, dsf: f });
+    }
+    return profil;
+  }
+  function lireTir() {
+    const tir = {
+      distanceM: nombre('t-distance'),
+      siteDeg: nombre('t-site'),
+      azimutDeg: nombre('t-azimut'),
+      latitudeDeg: nombre('t-latitude'),
+      tempC: nombre('t-temp'),
+      tempPoudreC: nombre('t-poudre', true),
+      pressionHPa: nombre('t-pression'),
+      humiditePct: nombre('t-humidite')
+    };
+    const v1 = nombre('v-1', true);
+    let v2 = nombre('v-2', true);
+    if (v1 !== null && v2 !== null && v2 < v1) v2 = v1; // vent 2 (maximal) jamais inférieur au vent 1
+    if ((v1 !== null && v1 > 0) || (v2 !== null && v2 > 0)) {
+      tir.vent = { vitesse1MS: v1 || 0, vitesse2MS: v2, directionHeures: nombre('v-dir') };
+    } else {
+      // Vent nul : la direction sert encore à l'incertitude de vent du WEZ (portée par la vitesse, dans cette direction).
+      const dir = nombre('v-dir', true);
+      if (dir !== null) tir.vent = { vitesse1MS: 0, vitesse2MS: null, directionHeures: dir };
+    }
+    const dz = nombre('vz-distance', true);
+    if (dz !== null) {
+      const vzv = nombre('vz-vitesse', true), dzd = nombre('vz-dir', true);
+      tir.ventZone = { distanceM: dz, vitesseMS: vzv || 0, directionHeures: vzv ? nombre('vz-dir') : (dzd === null ? 9 : dzd) };
+    }
+    const vc = nombre('c-vitesse-kmh', true);
+    if (vc !== null && vc > 0) {
+      tir.cible = { vitesseMS: vc / 3.6, sens: radio('senscible') === 'gauche' ? -1 : 1, angleDeg: nombre('c-angle') };
+    }
+    const dv = nombre('t-devers', true);
+    if (dv !== null && dv !== 0) tir.deversDeg = radio('sensdevers') === 'gauche' ? -dv : dv; // + = haut vers la droite
+    return tir;
+  }
+  function lireFormulaire() {
+    document.querySelectorAll('[aria-invalid="true"]').forEach(el => el.removeAttribute('aria-invalid'));
+    return { profil: lireProfil(), tir: lireTir() };
+  }
+  function libelle(el) {
+    const l = document.querySelector('label[for="' + el.id + '"]');
+    return l ? l.textContent.trim() : el.id;
+  }
+  function message(e) {
+    if (e instanceof ErreurChamp) {
+      e.el.setAttribute('aria-invalid', 'true');
+      return libelle(e.el) + ' : ' + e.message + '.';
+    }
+    return e && e.message ? e.message : String(e);
+  }
+
+  // ----- affichage -----
+  function afficherErreur(e) {
+    $('afficheur').classList.add('en-erreur');
+    const z = $('r-erreur');
+    z.textContent = message(e);
+    z.hidden = false;
+    $('r-alertes').innerHTML = '';
+    $('table-corps').innerHTML = '';
+    ['b-elev', 'b-der', 'b-tof'].forEach(id => { $(id).textContent = '—'; });
+    afficherAides(null);
+    viderWez();
+    calibration = null;
+    $('k-actuel').textContent = '—';
+    $('k-calcule').textContent = '—';
+    $('b-appliquer').disabled = true;
+  }
+
+  function afficherSolution(s, d) {
+    $('afficheur').classList.remove('en-erreur');
+    $('r-erreur').hidden = true;
+    const e = s.elevationMrad, w = s.deriveMrad;
+    const e2 = Number(Math.abs(e).toFixed(2)), w2 = Number(Math.abs(w).toFixed(2));
+    $('r-elev').textContent = fmt(Math.abs(e), 2);
+    const sensE = e2 === 0 ? '' : (e > 0 ? '↑' : '↓');
+    $('r-elev-sens').textContent = sensE;
+    $('r-elev-sens').setAttribute('aria-label', sensE === '↑' ? 'monter' : (sensE === '↓' ? 'descendre' : ''));
+    $('r-der').textContent = fmt(Math.abs(w), 2);
+    const sensW = w2 === 0 ? '' : (w < 0 ? 'L' : 'R');
+    $('r-der-sens').textContent = sensW;
+    $('r-der-texte').textContent = sensW === 'L' ? 'mrad · vers la gauche'
+      : (sensW === 'R' ? 'mrad · vers la droite' : 'mrad');
+    $('r-tof').textContent = fmt(s.tempsVolS, 3);
+    $('r-v').textContent = fmt(s.vitesseCibleMS, 0);
+    $('r-mach').textContent = 'm/s · Mach ' + fmt(s.machCible, 2);
+    const az = ((d.tir.azimutDeg % 360) + 360) % 360;
+    $('r-titre').textContent = fmt(d.tir.distanceM, 0) + ' m · site ' + fmtSigne(d.tir.siteDeg, 1) + '° · az. ' + fmt(az, 0) + '°';
+
+    $('r-vent2').hidden = !s.vent2;
+    if (s.vent2) {
+      $('r-vent2-texte').textContent = 'élévation ' + hausse(s.vent2.elevationMrad, 2) + ' · dérive '
+        + lateral(s.vent2.deriveMrad, 2) + ' mrad';
+    }
+    $('r-cible').hidden = s.avanceMrad === null;
+    if (s.avanceMrad !== null) {
+      let t = 'avance ' + lateral(s.avanceMrad, 2) + ' · total ' + lateral(s.deriveTotaleMrad, 2) + ' mrad';
+      if (s.vent2) t += ' (vent 2 : ' + lateral(s.vent2.deriveTotaleMrad, 2) + ')';
+      $('r-cible-texte').textContent = t;
+    }
+    $('r-devers').hidden = !s.devers;
+    if (s.devers) {
+      const dv = s.devers;
+      $('r-devers-titre').textContent = 'Dévers ' + fmt(Math.abs(dv.deversDeg), 1) + '° ' + (dv.deversDeg > 0 ? 'droite' : 'gauche');
+      let t = 'corriger ' + hausse(-dv.impactVerticalMrad, 2) + ' · ' + lateral(-dv.impactLateralMrad, 2)
+        + ' → total ' + hausse(dv.elevationMrad, 2) + ' · ' + lateral(dv.deriveMrad, 2) + ' mrad';
+      if (s.vent2 && s.vent2.devers) t += ' (vent 2 : ' + hausse(s.vent2.devers.elevationMrad, 2) + ' · ' + lateral(s.vent2.devers.deriveMrad, 2) + ')';
+      $('r-devers-texte').textContent = t;
+    }
+
+    $('d-vent').textContent = s.ventMrad === null ? '—' : lateral(s.ventMrad, 2) + ' mrad';
+    $('d-gyro').textContent = lateral(s.deriveGyroMrad, 2) + ' mrad';
+    $('d-cor-h').textContent = s.coriolisHorizMrad === null ? '—' : lateral(s.coriolisHorizMrad, 2) + ' mrad';
+    $('d-saut').textContent = fmtSigne(s.sautAeroMrad, 3) + ' mrad';
+    $('d-cor-v').textContent = s.coriolisVertMrad === null ? '—' : fmtSigne(s.coriolisVertMrad, 2) + ' mrad';
+    $('d-dsf').textContent = fmt(s.dsf, 4) + ' · ' + fmt(s.cdf, 4);
+    $('d-v0').textContent = fmt(s.v0MS, 1) + ' m/s à ' + fmt(s.tempPoudreC, 1) + ' °C';
+    $('d-sg').textContent = 'SG ' + fmt(s.sg, 2);
+    $('d-rho').textContent = fmt(s.densiteKgM3, 4) + ' kg/m³';
+    $('d-zero').textContent = fmt(s.angleZeroMrad, 3) + ' mrad';
+
+    const alertes = [];
+    if (s.v0Extrapolee) alertes.push('Température de poudre hors de la table : V0 extrapolée');
+    if (s.sg < 1) alertes.push('SG < 1 : balle instable avec ce pas');
+    if (d.profil.pasSens === -1) alertes.push('Pas à gauche : balle déviée à gauche, dérive corrigée vers R');
+    $('r-alertes').innerHTML = '';
+    alertes.forEach(t => { const li = document.createElement('li'); li.textContent = t; $('r-alertes').appendChild(li); });
+
+    $('b-elev').innerHTML = fmt(Math.abs(e), 2) + ' <b>' + sensE + '</b>';
+    $('b-der').innerHTML = '<b>' + sensW + '</b> ' + fmt(Math.abs(w), 2);
+    $('b-tof').textContent = fmt(s.tempsVolS, 2) + ' s';
+  }
+
+  function afficherTable(lignes, distanceCible, avecVent2, avecCible, avecDevers, pDe) {
+    const colonnes = ['Distance', 'Élévation', 'Dérive'];
+    if (avecVent2) colonnes.push('Élév. vent 2', 'Dérive vent 2');
+    if (avecCible) colonnes.push('Avance');
+    if (avecDevers) colonnes.push('Élév. dévers', 'Dérive dévers');
+    colonnes.push('Temps de vol', 'Vitesse', 'Mach');
+    if (pDe) colonnes.push('Touché');
+    const tete = $('table-tete');
+    tete.innerHTML = '';
+    const trt = document.createElement('tr');
+    colonnes.forEach(c => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = c; trt.appendChild(th); });
+    tete.appendChild(trt);
+    const corps = $('table-corps');
+    corps.innerHTML = '';
+    lignes.forEach(l => {
+      const tr = document.createElement('tr');
+      if (Math.abs(l.distanceM - distanceCible) < 1e-9) tr.className = 'cible';
+      let cellules;
+      if (l.erreur) {
+        cellules = colonnes.map((c, i) => i === 0 ? fmt(l.distanceM, 0) + ' m' : '—');
+      } else {
+        cellules = [fmt(l.distanceM, 0) + ' m', fmtSigne(l.elevationMrad, 2), lateral(l.deriveMrad, 2)];
+        if (avecVent2) cellules.push(fmtSigne(l.vent2.elevationMrad, 2), lateral(l.vent2.deriveMrad, 2));
+        if (avecCible) cellules.push(lateral(l.avanceMrad, 2));
+        if (avecDevers) cellules.push(fmtSigne(l.devers.elevationMrad, 2), lateral(l.devers.deriveMrad, 2));
+        cellules.push(fmt(l.tempsVolS, 3) + ' s', fmt(l.vitesseCibleMS, 0) + ' m/s', fmt(l.machCible, 2));
+        if (pDe) { const p = pDe(l.distanceM); cellules.push(p === null ? '—' : fmt(100 * p, 0) + ' %'); }
+      }
+      cellules.forEach((c, i) => {
+        const td = document.createElement('td');
+        td.textContent = c;
+        if (l.erreur && i > 0) td.className = 'vide';
+        tr.appendChild(td);
+      });
+      corps.appendChild(tr);
+    });
+  }
+
+  function afficherAides(a) {
+    const sd = a && a.speedDrop, qw = a && a.quickWind, wd = a && a.windDot;
+    $('a-sd').innerHTML = sd ? fmt(sd.valeurMrad, 1) + '<small>mrad</small>' : '—';
+    $('a-sd-plage').innerHTML = sd
+      ? '<span><small>mini</small>' + fmt(sd.distanceMinM, 0) + ' m</span><span><small>maxi</small>' + fmt(sd.distanceMaxM, 0) + ' m</span>'
+      : '';
+    $('a-sd-texte').textContent = sd
+      ? 'Élévation ≈ distance/100 − ' + fmt(sd.valeurMrad, 1) + ', écart arrondi au 0,1 dans ± ' + fmt(sd.toleranceMrad, 1)
+        + ' mrad entre les distances mini et maxi' + (sd.borneAtteinte ? ' (plage limitée par la zone calculée).' : '.')
+      : 'Non calculable avec ces données.';
+    $('a-qw').innerHTML = qw ? fmt(qw.vitesseMS, 1) + '<small>m/s</small>' : '—';
+    $('a-qw-texte').textContent = qw ? 'Correction pour 1 quick wind de vent plein (mrad) :' : 'Non calculable avec ces données.';
+    $('a-qw-valeurs').innerHTML = qw
+      ? qw.valeursDistance.map(v => '<li><b>' + v.distanceM + ' m</b> ' + fmt(v.mrad, 1) + '</li>').join('') : '';
+    $('a-wd').innerHTML = wd ? fmt(wd.vitesseMS, 1) + '<small>m/s par point</small>' : '—';
+    $('a-wd-texte').textContent = wd
+      ? 'Calé à ' + fmt(wd.distanceM, 0) + ' m (élévation 4 mrad) : ' + fmt(wd.vent2ePointMS, 1)
+        + ' m/s de vent traversier plein au 2e point.'
+      : 'L\'élévation n\'atteint pas 4 mrad dans la zone calculée.';
+  }
+
+  function majSortieV0(profil) {
+    const z = $('v0p-sortie');
+    if (!profil.penteV0) { z.textContent = '—'; return; }
+    const a = S().loiV0(profil, -45).v0, b = S().loiV0(profil, 60).v0;
+    z.textContent = 'V0 à −45 °C : ' + fmt(a, 1) + ' m/s · à 60 °C : ' + fmt(b, 1) + ' m/s';
+  }
+
+  // ----- calcul -----
+  let minuterieAides = null;
+  let derniere = null;   // dernier calcul : { d, s, distances, lignes, wez }
+  function lireValeur(id) { const t = $(id).value.trim().replace(/−/g, '-').replace(',', '.'); return t === '' ? null : Number(t); }
+  function distancesCarte(distanceCible) {
+    let debut = lireValeur('rc-debut'), fin = lireValeur('rc-fin'), pas = lireValeur('rc-pas'), msg = '';
+    if (debut === null) debut = 100;
+    if (fin === null) fin = Math.max(2000, Math.ceil(distanceCible / 100) * 100);
+    if (pas === null) pas = 100;
+    if (!(debut > 0 && fin >= debut && pas > 0) || (fin - debut) / pas > 500) {
+      msg = 'Réglages de la table invalides (500 lignes au plus) : 100 à 2 000 m par 100 m.';
+      debut = 100; fin = 2000; pas = 100;
+    }
+    const liste = [];
+    for (let k = 0; debut + k * pas <= fin + 1e-9; k++) liste.push(Math.round((debut + k * pas) * 1000) / 1000);
+    if (liste.indexOf(distanceCible) < 0) { liste.push(distanceCible); liste.sort((a, b) => a - b); }
+    return { distances: liste, message: msg };
+  }
+  function calculer() {
+    if (!window.Solveur) {
+      afficherErreur(new Error('solveur.js introuvable : il doit se trouver dans le même dossier que cette page.'));
+      return;
+    }
+    let d;
+    try { d = lireFormulaire(); } catch (e) { afficherErreur(e); derniere = null; return; }
+    let s;
+    try { majSortieV0(d.profil); s = S().resoudre(d.profil, d.tir); } catch (e) { afficherErreur(e); derniere = null; return; }
+    afficherSolution(s, d);
+    const carte = distancesCarte(d.tir.distanceM);
+    sortie('rc-sortie', carte.message, !!carte.message);
+    let lignes = [];
+    try { lignes = S().table(d.profil, d.tir, carte.distances); } catch (e) { lignes = []; }
+    derniere = { d: d, s: s, distances: carte.distances, lignes: lignes, wez: null };
+    afficherTableCourante();
+    sauver();
+    clearTimeout(minuterieAides);
+    const courant = derniere;
+    minuterieAides = setTimeout(() => {
+      try { afficherAides(S().aidesTir(d.profil, d.tir, { toleranceSpeedDropMrad: Number(radio('tolsd')) || 0.1 })); }
+      catch (e) { afficherAides(null); }
+      minuterieAides = setTimeout(() => {
+        if (derniere !== courant) return;
+        calculerWez();
+        minuterieAides = setTimeout(() => {
+          if (derniere !== courant) return;
+          try { fenetres = S().distancesMach(d.profil, d.tir, [1.3, 1.2, 0.9]); } catch (e) { fenetres = null; }
+          majConseil();
+          calculerCalibration();
+        }, 20);
+      }, 20);
+    }, 30);
+  }
+  function afficherTableCourante() {
+    const c = derniere;
+    if (!c) { $('table-corps').innerHTML = ''; return; }
+    afficherTable(c.lignes, c.d.tir.distanceM, !!c.s.vent2, c.s.avanceMrad !== null, !!c.s.devers, c.wez ? c.wez.pDe : null);
+  }
+
+  // ----- WEZ -----
+  let minuterieWez = null;
+  const NOMS_SOURCES = { v0: 'V0', trainee: 'traînée', distance: 'distance', temp: 'température', pression: 'pression',
+    humidite: 'humidité', site: 'inclinaison', latitude: 'latitude', azimut: 'azimut', vent: 'vent', fusil: 'fusil' };
+  function lireWez() {
+    const n = id => { const v = nombre(id, true); if (v !== null && v < 0) throw new ErreurChamp($(id), 'valeur positive attendue'); return v || 0; };
+    const cercle = radio('formecible') === 'cercle';
+    const taille = id => { const v = n(id); if (!(v > 0)) throw new ErreurChamp($(id), 'taille de cible requise'); return v / 100; };
+    const cible = cercle ? { forme: 'cercle', diametreM: taille('w-diametre') }
+      : { forme: 'rectangle', largeurM: taille('w-largeur'), hauteurM: taille('w-hauteur') };
+    const precision = n('w-fusil') * (radio('unitefusil') === 'moa' ? MOA_EN_MRAD : 1);
+    // Entrées en écart-type ; précision du fusil = largeur à 95 % par axe = 3,92 écarts-types (écran WEZ d'AB Quantum :
+    // 0,20 mrad saisis → 0,052 mrad par axe dans ses graphiques).
+    return { cible: cible, incertitudes: { fusilMrad: precision / 3.92, v0MS: n('w-v0'), traineePct: n('w-trainee'),
+      distanceM: n('w-distance'), ventMS: n('w-vent'), tempC: n('w-temp'), pressionHPa: n('w-pression'),
+      humiditePct: n('w-humidite'), siteDeg: n('w-site'), latitudeDeg: n('w-latitude'), azimutDeg: n('w-azimut') } };
+  }
+  function distancesPourWez(distances, cible) { // 30 distances au plus, la distance de tir toujours comprise
+    if (distances.length <= 30) return distances.slice();
+    const pas = Math.ceil(distances.length / 29), l = distances.filter((x, k) => k % pas === 0);
+    if (l[l.length - 1] !== distances[distances.length - 1]) l.push(distances[distances.length - 1]);
+    if (l.indexOf(cible) < 0) l.push(cible);
+    return l.sort((a, b) => a - b);
+  }
+  function viderWez(texte) {
+    $('wz-p').textContent = '—';
+    $('wz-p-texte').textContent = texte || '—';
+    $('wz-sigmas').textContent = '—';
+    $('wz-contrib-corps').innerHTML = '';
+    $('wz-contrib').hidden = true;
+    $('wz-courbe').innerHTML = '';
+    $('wz-cible').innerHTML = '';
+    $('wz-bulle').hidden = true;
+  }
+  function calculerWez() {
+    const c = derniere;
+    const zErr = $('wz-erreur');
+    zErr.hidden = true;
+    ['w-largeur', 'w-hauteur', 'w-diametre', 'w-fusil', 'w-v0', 'w-trainee', 'w-distance', 'w-vent', 'w-temp', 'w-pression',
+      'w-humidite', 'w-site', 'w-latitude', 'w-azimut'].forEach(id => $(id).removeAttribute('aria-invalid'));
+    if (!c) { viderWez(); return; }
+    const hv = c.d.tir.vent ? c.d.tir.vent.directionHeures : 9;
+    const effet = (() => { const r = (((hv % 12) + 12) % 12); const t = Math.abs(Math.sin(r * Math.PI / 6));
+      return t < 0.26 ? 'de face ou arrière : presque sans effet latéral' : (t > 0.97 ? 'en travers' : 'en partie en travers'); })();
+    $('w-vent-aide').textContent = 'sur la vitesse, dans la direction du bloc Tir : ' + fmt(hv, hv % 1 ? 1 : 0) + ' h, ' + effet;
+    let entrees;
+    try { entrees = lireWez(); } catch (e) { zErr.textContent = message(e); zErr.hidden = false; viderWez(); c.wez = null; afficherTableCourante(); return; }
+    let res;
+    try {
+      const dW = distancesPourWez(c.distances, c.d.tir.distanceM);
+      res = S().wez(c.d.profil, c.d.tir, dW, entrees.incertitudes, entrees.cible, { impactsDistanceM: c.d.tir.distanceM, dt: 0.004 });
+    } catch (e) { zErr.textContent = message(e); zErr.hidden = false; viderWez(); c.wez = null; afficherTableCourante(); return; }
+    const ok = res.filter(r => !r.erreur);
+    const pDe = R => { // interpolation linéaire entre les distances calculées
+      if (!ok.length || R < ok[0].distanceM - 1e-9 || R > ok[ok.length - 1].distanceM + 1e-9) return null;
+      for (let k = 0; k < ok.length; k++) {
+        if (Math.abs(ok[k].distanceM - R) < 1e-9) return ok[k].pTouche;
+        if (ok[k].distanceM > R) { const a = ok[k - 1], b = ok[k]; return a.pTouche + (R - a.distanceM) * (b.pTouche - a.pTouche) / (b.distanceM - a.distanceM); }
+      }
+      return null;
+    };
+    c.wez = { resultats: ok, pDe: pDe, entrees: entrees };
+    afficherTableCourante();
+    const ici = ok.find(r => Math.abs(r.distanceM - c.d.tir.distanceM) < 1e-9);
+    if (!ici) { viderWez('Distance de tir hors de portée.'); return; }
+    const ci = entrees.cible;
+    $('wz-p').textContent = fmt(100 * ici.pTouche, 0) + ' %';
+    $('wz-p-texte').textContent = 'de toucher au premier coup à ' + fmt(ici.distanceM, 0) + ' m, cible '
+      + (ci.forme === 'cercle' ? 'ronde de ' + fmt(100 * ci.diametreM, 0) + ' cm' : fmt(100 * ci.largeurM, 0) + ' × ' + fmt(100 * ci.hauteurM, 0) + ' cm');
+    const cm = m => fmt(m * ici.distanceM / 10, 0); // mrad → cm à la distance
+    $('wz-sigmas').textContent = 'Écart-type des impacts : vertical ' + fmt(ici.sigmaVMrad, 2) + ' mrad (' + cm(ici.sigmaVMrad) + ' cm) · latéral '
+      + fmt(ici.sigmaHMrad, 2) + ' mrad (' + cm(ici.sigmaHMrad) + ' cm)';
+    // Contributions par source (écart-type, mrad), classées par la plus forte des deux : mêmes grandeurs que les
+    // graphiques « Vertical / Horizon Uncertainty » d'AB Quantum.
+    const corps = $('wz-contrib-corps');
+    corps.innerHTML = '';
+    ici.contributions.slice().sort((a, b) => Math.max(b.vMrad, b.hMrad) - Math.max(a.vMrad, a.hMrad))
+      .filter(x => Math.max(x.vMrad, x.hMrad) >= 0.0005).forEach(x => {
+        const tr = document.createElement('tr');
+        [NOMS_SOURCES[x.source] || x.source, fmt(x.vMrad, 3), fmt(x.hMrad, 3)].forEach(v => {
+          const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+        });
+        corps.appendChild(tr);
+      });
+    $('wz-contrib').hidden = !corps.children.length;
+    c.wez.ici = ici;
+    dessinerCourbe(ok, c.d.tir.distanceM);
+    dessinerCible(ici, ci);
+  }
+  function planifierWez() { clearTimeout(minuterieWez); minuterieWez = setTimeout(() => { calculerWez(); sauver(); }, 250); }
+
+  // Tracés SVG
+  const SVG = 'http://www.w3.org/2000/svg';
+  function el(parent, tag, attrs, texte) {
+    const e = document.createElementNS(SVG, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (texte !== undefined) e.textContent = texte;
+    parent.appendChild(e);
+    return e;
+  }
+  let courbe = null; // { points, x(), y(), svg } pour le survol
+  function largeurRendue(svg, min, max) { // viewBox à la largeur affichée : textes à leur taille réelle
+    const l = svg.parentNode.getBoundingClientRect().width;
+    return Math.round(Math.min(max, Math.max(min, l || max)));
+  }
+  function dessinerCourbe(res, distanceCible) {
+    const svg = $('wz-courbe');
+    svg.innerHTML = '';
+    const W = largeurRendue(svg, 300, 640), H = 230, g = 42, dr = 16, h = 14, b = 30;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const xmin = res[0].distanceM, xmax = res[res.length - 1].distanceM;
+    const X = R => g + (xmax > xmin ? (R - xmin) / (xmax - xmin) : 0.5) * (W - g - dr);
+    const Y = p => h + (1 - p) * (H - h - b);
+    [0, 0.25, 0.5, 0.75, 1].forEach(p => {
+      el(svg, 'line', { x1: g, x2: W - dr, y1: Y(p), y2: Y(p), class: 'graphe-grille' });
+      el(svg, 'text', { x: g - 8, y: Y(p) + 4, 'text-anchor': 'end', class: 'graphe-texte' }, fmt(100 * p, 0) + ' %');
+    });
+    const nEtiq = Math.max(3, Math.floor((W - g - dr) / 62)); // une étiquette de distance tous les 62 px au moins
+    const etendue = xmax - xmin, pasX = [100, 200, 250, 500, 1000, 2000].find(p => etendue / p <= nEtiq) || 5000;
+    for (let R = Math.ceil(xmin / pasX) * pasX; R <= xmax + 1e-9; R += pasX) {
+      el(svg, 'text', { x: X(R), y: H - 10, 'text-anchor': 'middle', class: 'graphe-texte' }, fmt(R, 0) + (R + pasX > xmax ? ' m' : ''));
+    }
+    const pts = res.map(r => [X(r.distanceM), Y(r.pTouche)]);
+    const ligne = pts.map((p, k) => (k ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    el(svg, 'path', { d: ligne + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + Y(0) + ' L' + pts[0][0].toFixed(1) + ' ' + Y(0) + ' Z', class: 'graphe-aire' });
+    el(svg, 'path', { d: ligne, class: 'graphe-trait' });
+    const ic = res.findIndex(r => Math.abs(r.distanceM - distanceCible) < 1e-9);
+    if (ic >= 0) {
+      el(svg, 'circle', { cx: pts[ic][0], cy: pts[ic][1], r: 4.5, class: 'graphe-point' });
+      const droite = pts[ic][0] > W - 90;
+      el(svg, 'text', { x: pts[ic][0] + (droite ? -9 : 9), y: pts[ic][1] - 9, 'text-anchor': droite ? 'end' : 'start', class: 'graphe-texte' },
+        fmt(100 * res[ic].pTouche, 0) + ' % à ' + fmt(distanceCible, 0) + ' m');
+    }
+    const repere = el(svg, 'line', { x1: 0, x2: 0, y1: h, y2: Y(0), class: 'graphe-repere', visibility: 'hidden' });
+    const point = el(svg, 'circle', { cx: 0, cy: 0, r: 4.5, class: 'graphe-point', visibility: 'hidden' });
+    courbe = { res: res, pts: pts, repere: repere, point: point, W: W, index: ic >= 0 ? ic : 0 };
+  }
+  function montrerBulle(k) {
+    if (!courbe) return;
+    const svg = $('wz-courbe'), bulle = $('wz-bulle'), p = courbe.pts[k], r = courbe.res[k];
+    courbe.index = k;
+    courbe.repere.setAttribute('x1', p[0]); courbe.repere.setAttribute('x2', p[0]); courbe.repere.setAttribute('visibility', 'visible');
+    courbe.point.setAttribute('cx', p[0]); courbe.point.setAttribute('cy', p[1]); courbe.point.setAttribute('visibility', 'visible');
+    const k2 = svg.getBoundingClientRect().width / courbe.W;
+    bulle.innerHTML = '';
+    const v = document.createElement('b'); v.textContent = fmt(100 * r.pTouche, 0) + ' %';
+    bulle.appendChild(v);
+    bulle.appendChild(document.createTextNode(' à ' + fmt(r.distanceM, 0) + ' m'));
+    bulle.style.left = (p[0] * k2) + 'px';
+    bulle.style.top = (p[1] * k2 - 10) + 'px';
+    bulle.hidden = false;
+  }
+  function cacherBulle() {
+    if (!courbe) return;
+    $('wz-bulle').hidden = true;
+    courbe.repere.setAttribute('visibility', 'hidden');
+    courbe.point.setAttribute('visibility', 'hidden');
+  }
+  $('wz-courbe').addEventListener('pointermove', e => {
+    if (!courbe) return;
+    const svg = $('wz-courbe'), r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * courbe.W / r.width;
+    let k = 0;
+    courbe.pts.forEach((p, i) => { if (Math.abs(p[0] - x) < Math.abs(courbe.pts[k][0] - x)) k = i; });
+    montrerBulle(k);
+  });
+  $('wz-courbe').addEventListener('pointerleave', cacherBulle);
+  $('wz-courbe').addEventListener('focus', () => { if (courbe) montrerBulle(courbe.index); });
+  $('wz-courbe').addEventListener('blur', cacherBulle);
+  let minuterieRedim = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(minuterieRedim);
+    minuterieRedim = setTimeout(() => {
+      const w = derniere && derniere.wez;
+      if (!w || !w.ici) return;
+      dessinerCourbe(w.resultats, derniere.d.tir.distanceM);
+      dessinerCible(w.ici, w.entrees.cible);
+    }, 150);
+  });
+  $('wz-courbe').addEventListener('keydown', e => {
+    if (!courbe) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      montrerBulle(Math.min(Math.max(courbe.index + (e.key === 'ArrowRight' ? 1 : -1), 0), courbe.pts.length - 1));
+    }
+  });
+  function dessinerCible(r, ci) {
+    // Même échelle sur les deux axes (cible à l'échelle) ; le cadre suit l'étendue des impacts : ±3,2 écarts-types
+    // ou la cible, la plus grande des deux, dans chaque direction.
+    const svg = $('wz-cible');
+    svg.innerHTML = '';
+    const W = largeurRendue(svg, 260, 420), m = 10, bas = 18, hMin = 90, hMax = 300;
+    const demiL = ci.forme === 'cercle' ? ci.diametreM / 2 : ci.largeurM / 2, demiH = ci.forme === 'cercle' ? ci.diametreM / 2 : ci.hauteurM / 2;
+    const sx = r.sigmaHMrad * r.distanceM / 1000, sy = r.sigmaVMrad * r.distanceM / 1000;
+    const ex = Math.max(demiL, 3.2 * sx) * 1.08, ey = Math.max(demiH, 3.2 * sy) * 1.08;
+    const k = Math.min((W / 2 - m) / ex, (hMax / 2 - m) / ey);
+    const H = Math.max(hMin, 2 * ey * k + 2 * m) + bas;
+    const cx = W / 2, cy = (H - bas) / 2;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H.toFixed(0));
+    el(svg, 'rect', { x: 0.5, y: 0.5, width: W - 1, height: H - bas - 1, rx: 4, class: 'graphe-grille', fill: 'none' });
+    el(svg, 'line', { x1: 1, x2: W - 1, y1: cy, y2: cy, class: 'graphe-grille' });
+    el(svg, 'line', { x1: cx, x2: cx, y1: 1, y2: H - bas - 1, class: 'graphe-grille' });
+    if (ci.forme === 'cercle') el(svg, 'circle', { cx: cx, cy: cy, r: demiL * k, class: 'graphe-cible' });
+    else el(svg, 'rect', { x: cx - demiL * k, y: cy - demiH * k, width: 2 * demiL * k, height: 2 * demiH * k, class: 'graphe-cible' });
+    const dedans = ci.forme === 'cercle' ? (x, y) => x * x + y * y <= demiL * demiL : (x, y) => Math.abs(x) <= demiL && Math.abs(y) <= demiH;
+    (r.impacts || []).forEach(p => {
+      const x = cx + p[0] * k, y = cy - p[1] * k;
+      if (x < 1 || x > W - 1 || y < 1 || y > H - bas - 1) return;
+      el(svg, 'circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 1.8, class: dedans(p[0], p[1]) ? 'graphe-impact-touche' : 'graphe-impact-manque' });
+    });
+    el(svg, 'text', { x: W - 2, y: H - 4, 'text-anchor': 'end', class: 'graphe-texte' },
+      'cadre ' + fmt(200 * ex, 0) + ' × ' + fmt(200 * ey, 0) + ' cm');
+  }
+
+  // ----- export de la range card (CSV, point-virgule, virgule décimale) -----
+  function exporterCarte() {
+    const c = derniere;
+    if (!c || !c.lignes.length) { sortie('rc-sortie', 'Rien à exporter : la solution est en erreur.', true); return; }
+    const p = c.d.profil, t = c.d.tir, s = c.s;
+    const n = (v, dec) => (v === null || v === undefined || !isFinite(v)) ? '' : v.toFixed(dec).replace('.', ',');
+    const haut = v => (Math.abs(v) < 0.005 ? '0,00' : n(Math.abs(v), 2) + (v > 0 ? ' U' : ' D'));
+    const cote = v => (Math.abs(v) < 0.005 ? '0,00' : n(Math.abs(v), 2) + (v > 0 ? ' R' : ' L'));
+    const L = [];
+    const maintenant = new Date();
+    L.push(['Range card', 'Balistique WMLRF v' + S().VERSION, maintenant.toLocaleString('fr-FR')]);
+    const o = tableImportee();
+    L.push(['V0 (m/s)', n(s.v0MS, 1), 'Poudre (°C)', n(s.tempPoudreC, 1), 'Poids (gr)', n(p.masseGrains, 1), 'Diamètre (mm)', n(p.diametreM * 1000, 2),
+      'Longueur (mm)', n(p.longueurM * 1000, 2), 'Traînée', p.traineePerso ? 'table importée (' + (o ? o.source : '') + ')' : 'G7 ' + n(p.bcG7, 3),
+      'CDF', n(s.cdf, 4)]);
+    L.push(['Pas', (p.pasSens === -1 ? 'gauche ' : 'droite ') + n(p.pasM * 1000, 1) + ' mm', 'Entraxe (mm)', n(p.hauteurViseurM * 1000, 1),
+      'Zéro (m)', n(p.distanceZeroM, 0), 'Conditions du zérotage', p.zero ? n(p.zero.tempC, 1) + ' °C ' + n(p.zero.pressionHPa, 0) + ' hPa '
+        + n(p.zero.humiditePct, 0) + ' %' : 'conditions du tir']);
+    L.push(['Température (°C)', n(t.tempC, 1), 'Pression (hPa)', n(t.pressionHPa, 1), 'Humidité (%)', n(t.humiditePct, 0),
+      'Site (°)', n(t.siteDeg, 1), 'Azimut (°)', n(t.azimutDeg, 0), 'Latitude (°)', n(t.latitudeDeg, 1)]);
+    const v = t.vent;
+    L.push(['Vent 1 (m/s)', v ? n(v.vitesse1MS, 1) : '0', 'Vent 2 (m/s)', v && v.vitesse2MS !== null ? n(v.vitesse2MS, 1) : '',
+      'Direction (h)', v ? n(v.directionHeures, 1) : '', 'Vent à distance', t.ventZone ? 'dès ' + n(t.ventZone.distanceM, 0) + ' m, '
+        + n(t.ventZone.vitesseMS, 1) + ' m/s de ' + n(t.ventZone.directionHeures, 1) + ' h' : '',
+      'Dévers (°)', t.deversDeg ? n(t.deversDeg, 1) : '', 'Cible mobile (km/h)', t.cible ? n(t.cible.vitesseMS * 3.6, 1) : '']);
+    if (c.wez) {
+      const e = c.wez.entrees, ci = e.cible;
+      L.push(['WEZ, cible', ci.forme === 'cercle' ? 'ronde ' + n(ci.diametreM * 100, 0) + ' cm' : n(ci.largeurM * 100, 0) + ' × ' + n(ci.hauteurM * 100, 0) + ' cm',
+        'Précision du fusil', $('w-fusil').value + ' ' + $('w-fusil-unite').textContent, 'V0 écart-type (m/s)', $('w-v0').value,
+        'Traînée écart-type (%)', $('w-trainee').value, 'Distance écart-type (m)', $('w-distance').value, 'Vent écart-type (m/s)', $('w-vent').value,
+        'Température écart-type (°C)', $('w-temp').value, 'Pression écart-type (hPa)', $('w-pression').value, 'Humidité écart-type (%)', $('w-humidite').value,
+        'Inclinaison écart-type (°)', $('w-site').value, 'Latitude écart-type (°)', $('w-latitude').value, 'Azimut écart-type (°)', $('w-azimut').value]);
+    }
+    L.push([]);
+    const tete = ['Distance (m)', 'Élévation (mrad)', 'Dérive (mrad)'];
+    if (s.vent2) tete.push('Élévation vent 2 (mrad)', 'Dérive vent 2 (mrad)');
+    if (s.avanceMrad !== null) tete.push('Avance (mrad)');
+    if (s.devers) tete.push('Élévation dévers (mrad)', 'Dérive dévers (mrad)');
+    tete.push('Temps de vol (s)', 'Vitesse (m/s)', 'Mach', 'Énergie (J)');
+    if (c.wez) tete.push('Touché (%)');
+    L.push(tete);
+    const masse = p.masseGrains * 6.479891e-5;
+    c.lignes.forEach(l => {
+      if (l.erreur) { L.push([n(l.distanceM, 0), 'hors de portée']); return; }
+      const r = [n(l.distanceM, 0), haut(l.elevationMrad), cote(l.deriveMrad)];
+      if (s.vent2) r.push(haut(l.vent2.elevationMrad), cote(l.vent2.deriveMrad));
+      if (s.avanceMrad !== null) r.push(cote(l.avanceMrad));
+      if (s.devers) r.push(haut(l.devers.elevationMrad), cote(l.devers.deriveMrad));
+      r.push(n(l.tempsVolS, 3), n(l.vitesseCibleMS, 1), n(l.machCible, 2), n(0.5 * masse * l.vitesseCibleMS * l.vitesseCibleMS, 0));
+      if (c.wez) { const q = c.wez.pDe(l.distanceM); r.push(q === null ? '' : n(100 * q, 0)); }
+      L.push(r);
+    });
+    const texte = L.map(r => r.map(x => { const v = String(x); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';')).join('\r\n');
+    const blob = new Blob(['﻿' + texte + '\r\n'], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    const z = x => String(x).padStart(2, '0');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'range-card_' + maintenant.getFullYear() + '-' + z(maintenant.getMonth() + 1) + '-' + z(maintenant.getDate()) + '_'
+      + z(maintenant.getHours()) + z(maintenant.getMinutes()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    sortie('rc-sortie', 'Fichier ' + a.download + ' enregistré (' + c.lignes.length + ' lignes).', false);
+  }
+  $('b-export').addEventListener('click', exporterCarte);
+
+  // ----- import d'une range card CDM : reconstruction de la table de traînée -----
+  function lireRangeCard(texte) {
+    const lignes = texte.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+    const iTete = lignes.findIndex(l => /^\s*Range\s*\[/i.test(l));
+    if (iTete < 0) throw new Error('fichier non reconnu : ligne « Range [M],Elevation … » absente (export CSV de range card AB Quantum attendu).');
+    const champs = {};
+    lignes.slice(0, iTete).forEach(l => { const c = l.split(','); for (let k = 0; k + 1 < c.length; k += 2) champs[c[k].trim()] = c[k + 1].trim(); });
+    const cle = motif => Object.keys(champs).find(k => motif.test(k));
+    const unite = k => { const m = k && k.match(/\[([^\]]+)\]/); return m ? m[1].toUpperCase() : ''; };
+    const val = (motif, conv) => { const k = cle(motif); if (!k) return null; const v = parseFloat(champs[k]); return isFinite(v) ? conv(v, unite(k)) : null; };
+    const vitesse = (v, u) => u === 'FPS' ? v * 0.3048 : (u === 'MPH' ? v * 0.44704 : (u === 'KM/H' || u === 'KPH' ? v / 3.6 : v));
+    const tete = lignes[iTete].split(',').map(x => x.trim());
+    const col = motif => tete.findIndex(x => motif.test(x));
+    const cR = col(/^Range/i), cE = col(/^Elevation/i), cV = col(/^Velocity/i);
+    if (cR < 0 || cE < 0 || cV < 0) throw new Error('colonnes Range, Elevation ou Velocity absentes.');
+    const uR = unite(tete[cR]), uE = unite(tete[cE]), uV = unite(tete[cV]);
+    const signe = s => { const m = s.trim().match(/^(-?[\d.]+)\s*([UDLR]?)$/i); if (!m) return NaN; const x = Number(m[1]);
+      return (m[2].toUpperCase() === 'D') ? -x : x; };
+    const carte = lignes.slice(iTete + 1).map(l => l.split(',')).filter(c => c.length > cV).map(c => ({
+      distanceM: Number(c[cR]) * (uR === 'YD' || uR === 'YDS' ? 0.9144 : 1),
+      elevationMrad: signe(c[cE]) * (uE === 'MOA' ? MOA_EN_MRAD : 1),
+      vitesseMS: vitesse(Number(c[cV]), uV) })).filter(q => isFinite(q.distanceM) && isFinite(q.elevationMrad) && isFinite(q.vitesseMS));
+    const heures = (() => { const k = cle(/^Wind Direction/i); if (!k) return 9; const m = champs[k].match(/^(\d+):(\d+)/);
+      return m ? Number(m[1]) + Number(m[2]) / 60 : 9; })();
+    return {
+      carte: carte,
+      mv: val(/^MV/i, vitesse),
+      poidsGr: val(/^BW/i, (v, u) => u === 'G' ? v * 15.4323584 : v),
+      diametreMm: val(/^BD/i, (v, u) => u === 'CM' ? v * 10 : (u === 'IN' ? v * 25.4 : v)),
+      modele: (cle(/^BC/i) || '').replace(/^BC\s*/i, ''),
+      tempC: val(/^TEMP/i, (v, u) => /F/.test(u) ? (v - 32) * 5 / 9 : v),
+      pressionHPa: val(/^Pressure/i, (v, u) => u === 'INHG' ? v * 33.8639 : (u === 'PSI' ? v * 68.9476 : (u === 'MMHG' ? v * 1.33322 : v))),
+      humiditePct: val(/^Humidity/i, v => v),
+      siteDeg: val(/^Inclination/i, v => v) || 0,
+      azimutDeg: val(/^Heading/i, v => v) || 0,
+      vent1: val(/^Wind Speed \[/i, vitesse) || 0,
+      ventHeures: heures
+    };
+  }
+  function importerCarte(nom, texte) {
+    const etat = $('trainee-etat');
+    let c, d;
+    try {
+      c = lireRangeCard(texte);
+      if (c.carte.length < 5) throw new Error('moins de cinq distances lisibles.');
+      if (c.tempC === null || c.pressionHPa === null || c.humiditePct === null) throw new Error('température, pression ou humidité absente de l\'en-tête.');
+      document.querySelectorAll('[aria-invalid="true"]').forEach(x => x.removeAttribute('aria-invalid'));
+      d = { profil: lireProfil(true), tir: lireTir() };
+      if (c.poidsGr !== null && Math.abs(c.poidsGr - d.profil.masseGrains) > 0.5) throw new Error('la carte est pour ' + fmt(c.poidsGr, 1) + ' gr, le profil pour ' + fmt(d.profil.masseGrains, 1) + ' gr.');
+      if (c.diametreMm !== null && Math.abs(c.diametreMm - d.profil.diametreM * 1000) > 0.05) throw new Error('la carte est pour ' + fmt(c.diametreMm, 2) + ' mm de diamètre, le profil pour ' + fmt(d.profil.diametreM * 1000, 2) + ' mm.');
+    } catch (e) { etat.textContent = 'Import impossible : ' + message(e); return; }
+    etat.textContent = 'Reconstruction de la courbe de traînée en cours (quelques secondes)…';
+    setTimeout(() => {
+      try {
+        const tir = { distanceM: 1000, siteDeg: c.siteDeg, azimutDeg: c.azimutDeg, latitudeDeg: d.tir.latitudeDeg, tempC: c.tempC,
+          tempPoudreC: null, pressionHPa: c.pressionHPa, humiditePct: c.humiditePct,
+          vent: c.vent1 > 0 ? { vitesse1MS: c.vent1, vitesse2MS: null, directionHeures: c.ventHeures } : null };
+        const profil = Object.assign({}, d.profil, { traineePerso: null, cdf: 1, dsf: [] });
+        const r = S().reconstruireTrainee(profil, tir, c.carte);
+        const v0 = S().loiV0(profil, c.tempC).v0;
+        const date = new Date();
+        $('trainee-json').value = JSON.stringify({ source: nom, date: date.toLocaleDateString('fr-FR'), modele: c.modele, table: r.table,
+          noeuds: r.noeuds, facteurs: r.facteurs, ecartElevationMaxMrad: r.ecartElevationMaxMrad, ecartVitesseMaxMS: r.ecartVitesseMaxMS,
+          distanceMaxM: r.distanceMaxM });
+        cocher('trainee', 'table');
+        majTrainee();
+        calculer();
+        let note = '';
+        if (c.mv !== null && Math.abs(c.mv - v0) > 1) note += ' Attention : V0 de la carte ' + fmt(c.mv, 1) + ' m/s, V0 du profil à ' + fmt(c.tempC, 1) + ' °C ' + fmt(v0, 1) + ' m/s.';
+        if (!/CDM/i.test(c.modele)) note += ' La carte n\'indique pas de CDM (' + (c.modele || 'modèle inconnu') + ').';
+        if (note) etat.textContent += note;
+      } catch (e) { etat.textContent = 'Import impossible : ' + message(e); }
+    }, 60);
+  }
+  $('b-import-cdm').addEventListener('click', () => $('f-import-cdm').click());
+  $('f-import-cdm').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const lecteur = new FileReader();
+    lecteur.onload = () => importerCarte(f.name, String(lecteur.result));
+    lecteur.onerror = () => { $('trainee-etat').textContent = 'Import impossible : fichier illisible.'; };
+    lecteur.readAsText(f);
+    e.target.value = '';
+  });
+
+  let minuterie = null;
+  function planifier() { clearTimeout(minuterie); minuterie = setTimeout(calculer, 180); }
+
+  function sortie(id, texte, erreur) {
+    const el = $(id);
+    el.textContent = texte;
+    el.classList.toggle('erreur', !!erreur);
+  }
+
+  // ----- calibrations (V0, CDF par la chute ou la vitesse, DSF), comme les écrans d'AB Quantum -----
+  let fenetres = null;        // distances aux Mach 1,3 / 1,2 / 0,9 dans les conditions du bloc Tir
+  let calibration = null;     // dernier résultat calculé, en attente d'« Appliquer »
+  let messageApplique = '';   // confirmation affichée après « Appliquer », jusqu'à la saisie suivante
+  let minuterieCalibration = null;
+  function typeCalibration() {
+    const t = radio('ktype');
+    return t === 'cdf' ? (radio('kmode') === 'vitesse' ? 'cdf-vitesse' : 'cdf') : (t === 'dsf' ? 'dsf' : 'v0');
+  }
+  function majTypeCalibration() {
+    const t = typeCalibration();
+    $('bloc-kmode').hidden = !(t === 'cdf' || t === 'cdf-vitesse');
+    $('champ-k-cdf').hidden = !(t === 'cdf' || t === 'cdf-vitesse');
+    $('champ-k-elev').hidden = t === 'cdf-vitesse';
+    $('champ-k-vit').hidden = t !== 'cdf-vitesse';
+    $('bloc-dsf').hidden = t !== 'dsf';
+    $('k-actuel-lib').textContent = t === 'v0' ? 'V0 actuelle' : (t === 'dsf' ? 'Mach à la cible' : 'CDF actuel');
+    $('k-calcule-lib').textContent = t === 'v0' ? 'V0 calculée' : (t === 'dsf' ? 'DSF calculé' : 'CDF calculé');
+    majConseil();
+  }
+  function majConseil() {
+    const t = typeCalibration(), f = fenetres;
+    let texte;
+    if (t === 'v0') {
+      texte = f && f[0] && f[1] ? 'Distance conseillée : de ' + fmt(f[0], 0) + ' à ' + fmt(f[1], 0) + ' m (balle entre Mach 1,3 et 1,2 à la cible).'
+        : 'Distance conseillée : balle entre Mach 1,3 et 1,2 à la cible.';
+    } else if (t === 'dsf') {
+      texte = f && f[2] ? 'Distance conseillée : au-delà de ' + fmt(f[2], 0) + ' m (balle sous Mach 0,9 à la cible).'
+        : 'Distance conseillée : balle sous Mach 0,9 à la cible.';
+    } else {
+      texte = 'Distance au-delà du zéro ; premier point conseillé vers Mach 1,2' + (f && f[1] ? ' (' + fmt(f[1], 0) + ' m)' : '') + '.';
+    }
+    $('k-conseil').textContent = texte;
+  }
+  function afficherCalibration(actuel, calcule, erreur) {
+    $('k-actuel').textContent = actuel;
+    $('k-calcule').textContent = calcule;
+    $('b-appliquer').disabled = !calibration;
+    sortie('k-sortie', erreur || '', !!erreur);
+  }
+  function calculerCalibration() {
+    clearTimeout(minuterieCalibration);
+    calibration = null;
+    const t = typeCalibration();
+    let d, dist, obs;
+    try {
+      d = lireFormulaire();
+      dist = nombre('k-dist', true);
+      obs = nombre(t === 'cdf-vitesse' ? 'k-vit' : 'k-elev', true);
+    } catch (e) { afficherCalibration('—', '—', message(e)); return; }
+    let actuel = '—';
+    try {
+      if (t === 'v0') actuel = fmt(S().loiV0(d.profil, d.tir.tempPoudreC === null ? d.tir.tempC : d.tir.tempPoudreC).v0, 1) + ' m/s';
+      else if (t !== 'dsf') actuel = fmt(d.profil.cdf, 3);
+    } catch (e) { /* loi V0 incomplète : signalée par le calcul principal */ }
+    if (dist === null || obs === null) { afficherCalibration(actuel, '—', ''); return; }
+    try {
+      if (t === 'v0') {
+        const r = S().calibrerV0(d.profil, d.tir, dist, obs);
+        calibration = { type: t, r: r };
+        afficherCalibration(fmt(r.v0ActuelleMS, 1) + ' m/s', fmt(r.v0MS, 1) + ' m/s',
+          '');
+        sortie('k-sortie', 'Écart ' + fmtSigne(r.deltaMS, 1) + ' m/s, reporté sur toute la loi V0 ; Mach ' + fmt(r.mach, 3) + ' à ' + fmt(dist, 0) + ' m.', false);
+      } else if (t === 'cdf' || t === 'cdf-vitesse') {
+        const r = t === 'cdf' ? S().calibrerCDF(d.profil, d.tir, dist, obs) : S().calibrerCDFVitesse(d.profil, d.tir, dist, obs);
+        calibration = { type: t, r: r };
+        afficherCalibration(fmt(r.cdfActuel, 3), fmt(r.cdf, 3), '');
+        sortie('k-sortie', 'Mach ' + fmt(r.mach, 3) + ' à ' + fmt(dist, 0) + ' m.', false);
+      } else {
+        const r = S().calibrerDSF(d.profil, d.tir, dist, obs);
+        calibration = { type: t, r: r };
+        afficherCalibration(fmt(r.mach, 3), fmt(r.dsf, 3), '');
+        sortie('k-sortie', 'Élévation calculée sans DSF : ' + fmt(r.elevationCalculeeMrad, 2) + ' mrad.', false);
+      }
+    } catch (e) { calibration = null; afficherCalibration(actuel, '—', message(e)); }
+    if (messageApplique) { sortie('k-sortie', messageApplique, false); messageApplique = ''; }
+  }
+  function planifierCalibration() { clearTimeout(minuterieCalibration); minuterieCalibration = setTimeout(calculerCalibration, 250); }
+
+  function appliquerCalibration() {
+    const c = calibration;
+    if (!c) return;
+    try {
+      if (c.type === 'v0') {
+        const delta = c.r.deltaMS;
+        if (radio('modev0') === 'pente') $('v0p-v').value = fmtSaisie(nombre('v0p-v') + delta, 2);
+        else for (let i = 1; i <= 3; i++) { const v = nombre('v0-v' + i, true); if (v !== null) $('v0-v' + i).value = fmtSaisie(v + delta, 2); }
+        sortie('k-sortie', 'Loi V0 décalée de ' + fmtSigne(delta, 1) + ' m/s.', false);
+      } else if (c.type === 'cdf' || c.type === 'cdf-vitesse') {
+        $('k-cdf').value = fmtSaisie(c.r.cdf, 4);
+        let t = 'CDF ' + fmt(c.r.cdf, 4) + ' appliqué.';
+        const f1 = nombre('dsf-f1', true);
+        if (f1 === null || Math.abs(f1 - 1) < 1e-9) {
+          $('dsf-m1').value = fmtSaisie(c.r.mach, 3);
+          $('dsf-f1').value = '1';
+          t += ' Ligne 1 du DSF placée à Mach ' + fmt(c.r.mach, 3) + '.';
+        }
+        sortie('k-sortie', t, false);
+      } else {
+        const lignes = lireProfil().dsf.filter(l => Math.abs(l.mach - c.r.mach) > 0.005);
+        lignes.push({ mach: c.r.mach, dsf: c.r.dsf });
+        lignes.sort((a, b) => b.mach - a.mach);
+        if (lignes.length > 6) throw new Error('DSF : six lignes au plus ; effacez-en une.');
+        for (let i = 1; i <= 6; i++) {
+          const l = lignes[i - 1];
+          $('dsf-m' + i).value = l ? fmtSaisie(l.mach, 3) : '';
+          $('dsf-f' + i).value = l ? fmtSaisie(l.dsf, 4) : '';
+        }
+        sortie('k-sortie', 'Ligne DSF ' + fmt(c.r.dsf, 4) + ' à Mach ' + fmt(c.r.mach, 3) + ' ajoutée.', false);
+      }
+      messageApplique = $('k-sortie').textContent;
+      calibration = null;
+      $('b-appliquer').disabled = true;
+      calculer();
+    } catch (e) { sortie('k-sortie', message(e), true); }
+  }
+  $('b-appliquer').addEventListener('click', appliquerCalibration);
+  $('b-dsf-effacer').addEventListener('click', () => {
+    for (let i = 1; i <= 6; i++) { $('dsf-m' + i).value = ''; $('dsf-f' + i).value = ''; }
+    $('dsf-m1').value = '1,2';
+    $('dsf-f1').value = '1';
+    messageApplique = 'DSF effacé.';
+    calculer();
+  });
+
+  // ----- événements -----
+  document.getElementById('formulaire').addEventListener('input', e => {
+    if (RADIOS.indexOf(e.target.name) >= 0) return;
+    if (CHAMPS_CALIBRATION.indexOf(e.target.id) >= 0) { sauver(); planifierCalibration(); return; }
+    planifier();
+  });
+  // Vent 2 (maximal) jamais inférieur au vent 1 : corrigé dans le champ à la fin de la saisie.
+  function corrigerVent2() {
+    const v1 = lireValeur('v-1'), v2 = lireValeur('v-2');
+    if (v1 !== null && v2 !== null && isFinite(v1) && isFinite(v2) && v2 < v1) $('v-2').value = $('v-1').value.trim();
+  }
+  document.getElementById('formulaire').addEventListener('change', e => {
+    const n = e.target.name;
+    if (e.target.id === 'v-1' || e.target.id === 'v-2') { corrigerVent2(); calculer(); return; }
+    if (n === 'unite') { convertirUnites(e.target.value); calculer(); }
+    else if (n === 'modev0') { majModeV0(); calculer(); }
+    else if (n === 'zeroactif') { majZero(); calculer(); }
+    else if (n === 'sens' || n === 'senscible' || n === 'sensdevers') calculer();
+    else if (n === 'trainee') { majTrainee(); calculer(); }
+    else if (n === 'ktype' || n === 'kmode') { majTypeCalibration(); sauver(); calculerCalibration(); }
+  });
+  document.querySelectorAll('input[name="tolsd"]').forEach(el => el.addEventListener('change', calculer));
+  // WEZ et réglages de la table : hors du formulaire principal.
+  $('wez-saisie').addEventListener('input', e => { if (e.target.type !== 'radio') planifierWez(); });
+  $('wez-saisie').addEventListener('change', e => {
+    if (e.target.name === 'formecible' || e.target.name === 'unitefusil') { majFormeCible(); planifierWez(); }
+  });
+  ['rc-debut', 'rc-fin', 'rc-pas'].forEach(id => $(id).addEventListener('input', planifier));
+  document.getElementById('formulaire').addEventListener('submit', e => { e.preventDefault(); calculer(); });
+  document.getElementById('b-exemple').addEventListener('click', () => {
+    ecrireEtat(Object.assign({}, EXEMPLE, { 'trainee-json': $('trainee-json').value })); // la table importée est conservée
+    calculer();
+  });
+
+  // Barre de lecture : petit écran, quand l'afficheur est hors de vue.
+  const barre = $('barre');
+  const etroit = window.matchMedia('(max-width: 899px)');
+  let afficheurVisible = true;
+  function majBarre() { barre.hidden = !(etroit.matches && !afficheurVisible); }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entrees => { afficheurVisible = entrees[0].isIntersecting; majBarre(); })
+      .observe($('afficheur'));
+  }
+  if (etroit.addEventListener) etroit.addEventListener('change', majBarre);
+
+  // Un état enregistré par une version précédente ne contient pas les nouveaux champs : ils prennent
+  // des valeurs neutres (pas de vent, cible fixe, arme d'aplomb, pas de calibration en cours), jamais
+  // celles de l'exemple. L'état de la version 0.2 est repris et converti.
+  const NEUTRE = { 'v-1': '', 'v-2': '', 'vz-distance': '', 'vz-vitesse': '', 'c-vitesse-kmh': '', 't-devers': '', 'k-dist': '',
+    'k-elev': '', 'k-vit': '' };
+  // États des versions 0.2 et 0.3 : pas remis à droite (demandes de l'auteur du 2026-09-23 ; un pas à gauche
+  // resté coché donnait R 0,45 au lieu de L 0,73 à 1 600 m).
+  // Version 0.4 et avant : sans vent saisi, la direction 9 h venait de l'ancien exemple et restait sans effet ;
+  // elle oriente désormais l'incertitude de vent du WEZ : remise à 12 h, comme les range cards AB Quantum.
+  const directionNeutre = e => ((e['v-1'] || '') === '' && (e['v-2'] || '') === '' && e['v-dir'] === '9')
+    ? Object.assign({}, e, { 'v-dir': '12' }) : e;
+  let sauve = charger(CLE);
+  if (!sauve) {
+    const v2 = charger(CLE_V2);
+    if (v2) sauve = directionNeutre(v2);
+    else {
+      const v1 = charger(CLE_V1);
+      if (v1) sauve = directionNeutre(Object.assign({}, v1, { sens: 'droite' }));
+      else { const ancien = charger(CLE_V0); if (ancien) sauve = directionNeutre(migrerV0(ancien)); }
+    }
+  }
+  ecrireEtat(sauve ? Object.assign({}, EXEMPLE, NEUTRE, sauve) : EXEMPLE);
+  calculer();
+})();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* fichier local : pas de cache hors ligne */ });
+    });
+  }
+</script>
