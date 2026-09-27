@@ -1,5 +1,5 @@
 /* Service worker du calculateur balistique, généré par assembler_site.py. Ne pas modifier à la main. */
-const VERSION = '687d3bd549d6';
+const VERSION = 'd4f8db830821';
 const CACHE = 'calculateur-' + VERSION;
 const POLICES = 'calculateur-polices';
 const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icone-180.png', 'icone-192.png', 'icone-512.png'];

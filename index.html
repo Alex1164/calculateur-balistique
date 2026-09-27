@@ -204,15 +204,16 @@
   .saisie-unite:has(input[aria-invalid="true"]) { border-color: var(--erreur); }
 
   /* Table V0 */
-  .table-v0, .table-dsf {
+  .table-v0, .table-dsf, .table-tranches {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
     gap: 8px 12px;
     align-items: center;
     max-width: 440px;
   }
-  .table-v0 .entete-col, .table-dsf .entete-col { font-size: 12px; color: var(--sourdine); font-weight: 500; }
-  .table-v0 .rang, .table-dsf .rang { font: 500 12px var(--police-mono); color: var(--sourdine); }
+  .table-v0 .entete-col, .table-dsf .entete-col, .table-tranches .entete-col { font-size: 12px; color: var(--sourdine); font-weight: 500; }
+  .table-v0 .rang, .table-dsf .rang, .table-tranches .rang { font: 500 12px var(--police-mono); color: var(--sourdine); }
+  .table-tranches .tranche-fin { padding-left: 11px; font-size: 14px; color: var(--sourdine); }
   .sous-bloc-interne { display: grid; gap: 10px; }
   .sortie-calcul { font-size: 13px; color: var(--sourdine); font-variant-numeric: tabular-nums; }
   .sortie-calcul.erreur { color: var(--erreur); }
@@ -815,7 +816,7 @@
                 <input type="hidden" id="trainee-json">
               </div>
               <p class="sortie-calcul" id="trainee-etat" role="status">—</p>
-              <span class="aide">Range card AB Quantum exportée en CSV avec le modèle CDM : la courbe de traînée est reconstruite à partir de ses colonnes vitesse et élévation, avec ce profil (V0, zéro, entraxe) et les conditions inscrites dans le fichier. Plus le pas de la carte est fin, plus la zone transsonique est précise.</span>
+              <span class="aide">Range card avec modèle CDM : la courbe de traînée est reconstruite à partir de ses colonnes vitesse et élévation, avec ce profil (V0, zéro, entraxe) et les conditions inscrites dans le fichier. Plus le pas de la carte est fin, plus la zone transsonique est précise.</span>
             </div>
           </fieldset>
 
@@ -1001,7 +1002,7 @@
             <div class="champ">
               <label for="w-fusil">Précision du fusil</label>
               <div class="saisie-unite"><input id="w-fusil" inputmode="decimal"><span class="unite" id="w-fusil-unite">mrad</span></div>
-              <span class="aide">« tient dans … » : largeur contenant 95 % des impacts, sur chaque axe (convention d'AB Quantum)</span>
+              <span class="aide">« tient dans … » : largeur contenant 95 % des impacts, sur chaque axe</span>
             </div>
             <div class="champ">
               <span class="etiquette" id="lib-unitefusil">Groupement en</span>
@@ -1023,11 +1024,23 @@
         </div>
         <div class="sous-bloc">
           <p class="sous-titre">Mesures et estimations, écarts-types</p>
-          <div class="champs">
-            <div class="champ">
-              <label for="w-distance">Distance</label>
-              <div class="saisie-unite"><input id="w-distance" inputmode="decimal"><span class="unite">m</span></div>
+          <div class="sous-bloc-interne">
+            <span class="etiquette" id="lib-w-dist">Distance (télémètre)</span>
+            <div class="table-tranches" role="group" aria-labelledby="lib-w-dist">
+              <span></span><span class="entete-col">Jusqu'à</span><span class="entete-col">Écart-type</span>
+              <span class="rang">1</span>
+              <div class="saisie-unite"><label class="visuellement-cache" for="w-dist-j1">Fin de la tranche 1</label><input id="w-dist-j1" inputmode="decimal"><span class="unite">m</span></div>
+              <div class="saisie-unite"><label class="visuellement-cache" for="w-dist-s1">Écart-type de distance, tranche 1</label><input id="w-dist-s1" inputmode="decimal"><span class="unite">m</span></div>
+              <span class="rang">2</span>
+              <div class="saisie-unite"><label class="visuellement-cache" for="w-dist-j2">Fin de la tranche 2</label><input id="w-dist-j2" inputmode="decimal"><span class="unite">m</span></div>
+              <div class="saisie-unite"><label class="visuellement-cache" for="w-dist-s2">Écart-type de distance, tranche 2</label><input id="w-dist-s2" inputmode="decimal"><span class="unite">m</span></div>
+              <span class="rang">3</span>
+              <span class="tranche-fin">au-delà</span>
+              <div class="saisie-unite"><label class="visuellement-cache" for="w-dist-s3">Écart-type de distance, au-delà</label><input id="w-dist-s3" inputmode="decimal"><span class="unite">m</span></div>
             </div>
+            <span class="aide" id="w-dist-aide">précision du télémètre par plage de distance</span>
+          </div>
+          <div class="champs">
             <div class="champ">
               <label for="w-vent">Vent</label>
               <div class="saisie-unite"><input id="w-vent" inputmode="decimal"><span class="unite">m/s</span></div>
@@ -1058,7 +1071,7 @@
               <div class="saisie-unite"><input id="w-azimut" inputmode="decimal"><span class="unite">°</span></div>
             </div>
           </div>
-          <span class="aide">Écart-type : l'erreur reste dans ± cette valeur 2 fois sur 3, comme les entrées du WEZ d'AB Quantum. Température : air seul (la V0 a sa propre ligne). Vide ou 0 : source ignorée.</span>
+          <span class="aide">Écart-type : l'erreur reste dans ± cette valeur 2 fois sur 3. Température : air seul (la V0 a sa propre ligne). Vide ou 0 : source ignorée.</span>
         </div>
         <p class="sortie-calcul erreur" id="wz-erreur" role="alert" hidden></p>
       </div>
@@ -1155,7 +1168,7 @@
         <h3>Probabilité de toucher (WEZ)</h3>
         <ul>
           <li>Pour chaque source d'incertitude, le solveur calcule l'écart d'élévation et de dérive que produit un écart d'une unité, à chaque distance. L'impact suit alors une loi normale à deux dimensions ; 20 000 tirs simulés (tirage fixe) donnent la probabilité de toucher la cible centrée sur le point visé.</li>
-          <li>Toutes les entrées sont des écarts-types, sauf la précision du fusil : largeur contenant 95 % des impacts sur chaque axe (3,92 écarts-types). Température : air seul. L'incertitude de vent porte sur la vitesse du vent, dans la direction saisie au bloc Tir : de face ou arrière, elle ne disperse presque pas latéralement ; en travers, elle domine à longue distance. Le zéro de l'arme reste celui du tir nominal.</li>
+          <li>Toutes les entrées sont des écarts-types, sauf la précision du fusil : largeur contenant 95 % des impacts sur chaque axe (3,92 écarts-types). Distance : écart-type par tranche, comme la précision d'un télémètre donnée par plage de distance ; la fin d'une tranche lui appartient (1 000 m est dans « jusqu'à 1 000 m »). Température : air seul. L'incertitude de vent porte sur la vitesse du vent, dans la direction saisie au bloc Tir : de face ou arrière, elle ne disperse presque pas latéralement ; en travers, elle domine à longue distance. Le zéro de l'arme reste celui du tir nominal.</li>
           <li>Conventions établies sur l'écran WEZ d'AB Quantum (1 000 m, vent 3 m/s de 3 h, mêmes réglages, cible 50 × 50 cm) : AB 17 %, page 17 % ; contributions par source identiques à quelques pour cent, sauf deux choix d'AB non repris. Distance : AB compte la pente de la trajectoire par rapport à l'axe du canon (31 mrad à 1 000 m) au lieu de la ligne de visée (19 mrad) ; 2 m d'erreur font 3,8 cm d'écart à 1 000 m, pas 6,5 cm. Azimut : AB approche le Coriolis vertical en tir tendu. Vent de 12 h : page 92 %, AB 90 % (écran) ou 86 % (colonne de la range card). AB ne tire que 100 coups par calcul : ±3 à 4 points d'un calcul à l'autre vers 85 %.</li>
           <li>Linéaire : exact pour de petites incertitudes ; contrôlé contre 600 tirs calculés un à un (écart-type à 1 % près).</li>
         </ul>
@@ -1182,7 +1195,7 @@
       </div>
       <div>
         <h3>Vérification</h3>
-        <p>60 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
+        <p>64 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
         <p>Comparé à la range card G7 d'AB Quantum avec les mêmes entrées (profil d'exemple, 1 000 m) : élévation à 0,005 mrad près jusqu'à 1 600 m, 0,07 mrad à 2 000 m ; vitesse à 0,5 m/s près. Dérive : AB Quantum compte le Coriolis horizontal par l'approximation Ω·X·sin φ·t, qui néglige le ralentissement de la balle ; avec elle, l'écart tombe à 0,005 mrad ; avec le Coriolis intégré, la dérive est plus faible de 0,01 mrad à 1 000 m et de 0,05 mrad à 2 000 m. Calibrations à 1 000 m pour 10,00 mrad : V0 838,4 m/s, CDF 0,913, DSF 0,943 à Mach 1,177, comme AB Quantum.</p>
       </div>
     </div>
@@ -1627,8 +1640,7 @@
   // poudre du jour) : l'élévation à la distance de zéro est alors toujours nulle.
   // Zéro latéral (option zeroLateral) : au zérotage, le tireur ramène aussi l'impact sur l'axe vertical du
   // réticule ; la dérive gyroscopique et le Coriolis horizontal à la distance de zéro sont absorbés par ce
-  // réglage et retranchés, en angle, des corrections de dérive (convention d'AB Quantum, vérifiée sur ses
-  // tables : dérive nulle à la distance de zéro).
+  // réglage et retranchés, en angle, des corrections de dérive (dérive nulle à la distance de zéro).
   // Options : dt (pas d'intégration, s) ; coriolis, deriveGyro, sautAero, dsfActif, decomposition
   // (parts de Coriolis et du vent), zeroLateral : booléens ; gravite (m/s², sinon pesanteur normale WGS 84
   // à la latitude) ; tMax (s). Réservées aux comparaisons : decalageVertical (entraxe compté à la
@@ -2036,9 +2048,10 @@
   // normale à deux dimensions, somme des contributions indépendantes et de la dispersion du fusil ; la
   // probabilité de toucher est estimée par nTirs tirs simulés (Monte Carlo, graine fixe) sur la cible, centrée
   // sur le point visé. Valable tant que les incertitudes restent petites devant les grandeurs (modèle linéaire).
-  // incertitudes : écarts-types (1σ) : fusilMrad (dispersion par axe), v0MS, traineePct, distanceM, tempC
-  //   (température de l'air seule, V0 inchangée), pressionHPa, humiditePct, siteDeg, latitudeDeg, azimutDeg, ventMS
-  //   (vitesse du vent, dans la direction saisie : voir ajouterVentDirection).
+  // incertitudes : écarts-types (1σ) : fusilMrad (dispersion par axe), v0MS, traineePct, distanceM (nombre, ou
+  //   tranches de distance : voir sigmaSelonDistance), tempC (température de l'air seule, V0 inchangée),
+  //   pressionHPa, humiditePct, siteDeg, latitudeDeg, azimutDeg, ventMS (vitesse du vent, dans la direction
+  //   saisie : voir ajouterVentDirection).
   // Le zéro de l'arme reste celui du tir nominal pour toutes les variations (option zeroFixe de preparer).
   // Conventions vérifiées sur l'écran WEZ d'AB Quantum de l'auteur (2026-09-23, 1 000 m, vent 3 m/s de 3 h : 17 %) :
   // entrées en écart-type ; contributions par source retrouvées (vent, pression, humidité, V0, traînée, température).
@@ -2053,7 +2066,7 @@
       t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return (((t ^ (t >>> 14)) >>> 0) + 0.5) / 4294967296; };
     return () => { const r = Math.sqrt(-2 * Math.log(u())), th = 2 * Math.PI * u(); return [r * Math.cos(th), r * Math.sin(th)]; };
   }
-  // Incertitude de vent (convention d'AB Quantum) : elle porte sur la vitesse du vent, dans la direction saisie
+  // Incertitude de vent : elle porte sur la vitesse du vent, dans la direction saisie
   // (vent 1 et vent à distance, chacun dans sa direction). Sans vent saisi, vent traversier venant de 9 h.
   // Vérifié sur la colonne P(hit) des range cards d'AB Quantum de l'auteur (vent 0 m/s de 12 h : l'incertitude
   // de 2 m/s y agit comme un vent de face ou arrière et ne disperse presque pas latéralement).
@@ -2063,6 +2076,19 @@
     t.vent = { vitesse1MS: (+v.vitesse1MS || 0) + dW, vitesse2MS: null, directionHeures: v.directionHeures };
     if (tir.ventZone) t.ventZone = Object.assign({}, tir.ventZone, { vitesseMS: (+tir.ventZone.vitesseMS || 0) + dW });
     return t;
+  }
+  // Écart-type d'une source à la distance R : nombre (même valeur à toutes les distances), ou tranches
+  // [{ jusquaM, sigmaM }], comme la précision d'un télémètre donnée par plage de distance (± 2 m jusqu'à 1 000 m,
+  // ± 3 m jusqu'à 2 000 m, ± 5 m au-delà par exemple). jusquaM : fin de la tranche, comprise dans la tranche ;
+  // absente, nulle ou Infinity : pas de fin. Tranches rangées ici par fin croissante ; au-delà de la dernière
+  // fin, la dernière tranche s'applique. sigmaM vide ou nul : source ignorée dans la tranche.
+  function sigmaSelonDistance(sigma, R) {
+    if (!Array.isArray(sigma)) return sigma > 0 ? sigma : 0;
+    const t = sigma.filter(Boolean).map(x => ({ fin: x.jusquaM > 0 ? x.jusquaM : Infinity, s: x.sigmaM > 0 ? x.sigmaM : 0 }))
+      .sort((a, b) => a.fin - b.fin);
+    if (!t.length) return 0;
+    for (const x of t) if (R <= x.fin + 1e-9) return x.s;
+    return t[t.length - 1].s;
   }
   function wez(profil, tir, distances, incertitudes, cible, options) {
     // Pas de 4 ms : les sensibilités sont des différences, identiques à 0,001 près à celles du pas de 2 ms.
@@ -2093,7 +2119,7 @@
     const sens = {};
     for (const s of SOURCES_WEZ) {
       const [sigma, calc] = variantes[s];
-      if (!(sigma > 0)) continue;
+      if (!distances.some(R => sigmaSelonDistance(sigma, R) > 0)) continue;
       const t = calc();
       sens[s] = { sigma: sigma, d: t.map((x, i) => (x.erreur || base[i].erreur) ? null
         : [x.elevationMrad - base[i].elevationMrad, x.deriveMrad - base[i].deriveMrad]) };
@@ -2107,9 +2133,9 @@
       let vv = sf * sf, hh = sf * sf, vh = 0;
       const contributions = [];
       for (const s of Object.keys(sens)) {
-        const d = sens[s].d[i];
-        if (!d) continue;
-        const a = d[0] * sens[s].sigma, b = d[1] * sens[s].sigma;
+        const d = sens[s].d[i], sg = sigmaSelonDistance(sens[s].sigma, R);
+        if (!d || !(sg > 0)) continue;
+        const a = d[0] * sg, b = d[1] * sg;
         vv += a * a; hh += b * b; vh += a * b;
         contributions.push({ source: s, vMrad: Math.abs(a), hMrad: Math.abs(b) });
       }
@@ -2231,6 +2257,7 @@
     effetDevers: effetDevers,
     aidesTir: aidesTir,
     wez: wez,
+    sigmaSelonDistance: sigmaSelonDistance,
     reconstruireTrainee: reconstruireTrainee,
     ajouterVentDirection: ajouterVentDirection,
     vitesseInitiale: vitesseInitiale,
@@ -2281,8 +2308,10 @@
     'trainee-json': '',
     // WEZ : réglages de l'écran WEZ d'AB Quantum de l'auteur (2026-09-23) ; cible à saisir.
     'w-largeur': '50', 'w-hauteur': '50', 'w-diametre': '50', 'w-fusil': '0,2', 'w-v0': '2,9', 'w-trainee': '1',
-    'w-distance': '2', 'w-vent': '2', 'w-temp': '1', 'w-pression': '2', 'w-humidite': '3', 'w-site': '1',
+    'w-vent': '2', 'w-temp': '1', 'w-pression': '2', 'w-humidite': '3', 'w-site': '1',
     'w-latitude': '0', 'w-azimut': '10',
+    // Distance : précision de télémètre par tranches (1σ : 2 m jusqu'à 1 000 m, 3 m jusqu'à 2 000 m, 5 m au-delà).
+    'w-dist-j1': '1000', 'w-dist-s1': '2', 'w-dist-j2': '2000', 'w-dist-s2': '3', 'w-dist-s3': '5',
     'rc-debut': '100', 'rc-fin': '2000', 'rc-pas': '100',
     unite: 'mm', sens: 'droite', modev0: 'table', senscible: 'droite', tolsd: '0.1',
     zeroactif: 'oui', ktype: 'v0', kmode: 'chute', sensdevers: 'droite', trainee: 'g7',
@@ -2734,11 +2763,29 @@
     const cible = cercle ? { forme: 'cercle', diametreM: taille('w-diametre') }
       : { forme: 'rectangle', largeurM: taille('w-largeur'), hauteurM: taille('w-hauteur') };
     const precision = n('w-fusil') * (radio('unitefusil') === 'moa' ? MOA_EN_MRAD : 1);
+    // Distance : écart-type par tranche, comme la précision d'un télémètre par plage de distance ; la fin d'une
+    // tranche lui appartient ; tranche entièrement vide ignorée ; « au-delà » : dernière tranche, sans fin.
+    const tranches = [];
+    let finPrecedente = 0;
+    [1, 2].forEach(k => {
+      const idFin = 'w-dist-j' + k, fin = nombre(idFin, true), s = n('w-dist-s' + k);
+      if (fin === null && $('w-dist-s' + k).value.trim() === '') return;
+      if (fin === null) throw new ErreurChamp($(idFin), 'fin de tranche requise');
+      if (!(fin > 0)) throw new ErreurChamp($(idFin), 'valeur positive attendue');
+      if (!(fin > finPrecedente)) throw new ErreurChamp($(idFin), 'doit dépasser la fin de la tranche précédente');
+      tranches.push({ jusquaM: fin, sigmaM: s });
+      finPrecedente = fin;
+    });
+    tranches.push({ jusquaM: null, sigmaM: n('w-dist-s3') });
     // Entrées en écart-type ; précision du fusil = largeur à 95 % par axe = 3,92 écarts-types (écran WEZ d'AB Quantum :
     // 0,20 mrad saisis → 0,052 mrad par axe dans ses graphiques).
     return { cible: cible, incertitudes: { fusilMrad: precision / 3.92, v0MS: n('w-v0'), traineePct: n('w-trainee'),
-      distanceM: n('w-distance'), ventMS: n('w-vent'), tempC: n('w-temp'), pressionHPa: n('w-pression'),
+      distanceM: tranches, ventMS: n('w-vent'), tempC: n('w-temp'), pressionHPa: n('w-pression'),
       humiditePct: n('w-humidite'), siteDeg: n('w-site'), latitudeDeg: n('w-latitude'), azimutDeg: n('w-azimut') } };
+  }
+  function texteTranches(tr) { // « 2 m jusqu'à 1 000 m / 3 m jusqu'à 2 000 m / 5 m au-delà »
+    return tr.map(x => fmtSaisie(x.sigmaM || 0, 2) + ' m' + (x.jusquaM ? ' jusqu\'à ' + fmt(x.jusquaM, 0) + ' m'
+      : (tr.length > 1 ? ' au-delà' : ''))).join(' / ');
   }
   function distancesPourWez(distances, cible) { // 30 distances au plus, la distance de tir toujours comprise
     if (distances.length <= 30) return distances.slice();
@@ -2761,8 +2808,10 @@
     const c = derniere;
     const zErr = $('wz-erreur');
     zErr.hidden = true;
-    ['w-largeur', 'w-hauteur', 'w-diametre', 'w-fusil', 'w-v0', 'w-trainee', 'w-distance', 'w-vent', 'w-temp', 'w-pression',
-      'w-humidite', 'w-site', 'w-latitude', 'w-azimut'].forEach(id => $(id).removeAttribute('aria-invalid'));
+    ['w-largeur', 'w-hauteur', 'w-diametre', 'w-fusil', 'w-v0', 'w-trainee', 'w-dist-j1', 'w-dist-s1', 'w-dist-j2', 'w-dist-s2',
+      'w-dist-s3', 'w-vent', 'w-temp', 'w-pression', 'w-humidite', 'w-site', 'w-latitude', 'w-azimut']
+      .forEach(id => $(id).removeAttribute('aria-invalid'));
+    $('w-dist-aide').textContent = 'précision du télémètre par plage de distance';
     if (!c) { viderWez(); return; }
     const hv = c.d.tir.vent ? c.d.tir.vent.directionHeures : 9;
     const effet = (() => { const r = (((hv % 12) + 12) % 12); const t = Math.abs(Math.sin(r * Math.PI / 6));
@@ -2770,6 +2819,9 @@
     $('w-vent-aide').textContent = 'sur la vitesse, dans la direction du bloc Tir : ' + fmt(hv, hv % 1 ? 1 : 0) + ' h, ' + effet;
     let entrees;
     try { entrees = lireWez(); } catch (e) { zErr.textContent = message(e); zErr.hidden = false; viderWez(); c.wez = null; afficherTableCourante(); return; }
+    const sDist = S().sigmaSelonDistance(entrees.incertitudes.distanceM, c.d.tir.distanceM);
+    $('w-dist-aide').textContent = 'précision du télémètre par plage de distance ; à ' + fmt(c.d.tir.distanceM, 0) + ' m : '
+      + (sDist > 0 ? fmtSaisie(sDist, 2) + ' m' : 'ignorée');
     let res;
     try {
       const dW = distancesPourWez(c.distances, c.d.tir.distanceM);
@@ -2965,7 +3017,7 @@
       const e = c.wez.entrees, ci = e.cible;
       L.push(['WEZ, cible', ci.forme === 'cercle' ? 'ronde ' + n(ci.diametreM * 100, 0) + ' cm' : n(ci.largeurM * 100, 0) + ' × ' + n(ci.hauteurM * 100, 0) + ' cm',
         'Précision du fusil', $('w-fusil').value + ' ' + $('w-fusil-unite').textContent, 'V0 écart-type (m/s)', $('w-v0').value,
-        'Traînée écart-type (%)', $('w-trainee').value, 'Distance écart-type (m)', $('w-distance').value, 'Vent écart-type (m/s)', $('w-vent').value,
+        'Traînée écart-type (%)', $('w-trainee').value, 'Distance écart-type', texteTranches(e.incertitudes.distanceM), 'Vent écart-type (m/s)', $('w-vent').value,
         'Température écart-type (°C)', $('w-temp').value, 'Pression écart-type (hPa)', $('w-pression').value, 'Humidité écart-type (%)', $('w-humidite').value,
         'Inclinaison écart-type (°)', $('w-site').value, 'Latitude écart-type (°)', $('w-latitude').value, 'Azimut écart-type (°)', $('w-azimut').value]);
     }
