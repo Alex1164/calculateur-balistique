@@ -708,7 +708,7 @@
                   </div>
                 </div>
               </div>
-              <span class="aide">L'impact part du côté du dévers et un peu bas. La ligne « Dévers » de la solution donne la correction à ajouter et le total, comptés à la verticale et à l'horizontale vraies.</span>
+              <span class="aide">L'impact part du côté du dévers et un peu bas. La ligne « Dévers » de la solution donne la correction à ajouter et le total à afficher sur l'arme inclinée : tourelles et réticule tournent avec elle.</span>
             </div>
           </fieldset>
 
@@ -1140,12 +1140,12 @@
           <li>Zéro vertical : calculé à plat dans les conditions du zérotage, avec la V0 de sa température, sans vent ni Coriolis ; si ces conditions ne sont pas prises en compte, dans les conditions du tir.</li>
           <li>Zéro latéral : la dérive gyroscopique et le Coriolis horizontal à la distance de zéro, rattrapés au zérotage, sont retranchés de la dérive (dérive nulle à la distance de zéro, comme AB Quantum).</li>
           <li>Cible mobile : avance = vitesse × sin(angle) × temps de vol / distance, du côté où la cible se déplace ; la dérive affichée ne la comprend pas, la ligne « Cible mobile » donne le total.</li>
-          <li>Dévers : angle de l'arme autour de la ligne de visée, côté où penche le haut de l'arme. La ligne « Dévers » donne la correction à ajouter et le total ; élévation et dérive affichées au-dessus sont celles de l'arme d'aplomb.</li>
+          <li>Dévers : angle de l'arme autour de la ligne de visée, côté où penche le haut de l'arme. La ligne « Dévers » donne la correction à ajouter et le total dans le repère de la lunette inclinée (tourelles, réticule) ; élévation et dérive affichées au-dessus sont celles de l'arme d'aplomb.</li>
         </ul>
       </div>
       <div>
         <h3>Modèle</h3>
-        <p>Point matériel en trois dimensions intégré par Runge-Kutta d'ordre 4 (pas de 1 ms), traînée G7 (ou table importée) interpolée par PCHIP et multipliée par le CDF, calculée sur la vitesse relative à l'air ; densité de l'air et vitesse du son recalculées avec l'altitude le long de la trajectoire ; accélération de Coriolis −2Ω×v intégrée ; pesanteur normale selon la latitude. La dérive gyroscopique est ajoutée d'après le temps de vol. L'élévation est multipliée par le DSF au Mach de la balle à la cible, puis le saut aérodynamique dû au vent traversier lui est ajouté. Dévers : vu de la lunette, l'axe du canon vise à la distance R le point (dérive affichée, angle du zéro + élévation affichée − entraxe/R) ; le dévers fait tourner ce point autour de la ligne de visée, alors que la chute reste verticale ; l'écart d'impact est la différence (géométrie exacte dans le vide, contrôlée). Non modélisé : vent variable le long de la trajectoire.</p>
+        <p>Point matériel en trois dimensions intégré par Runge-Kutta d'ordre 4 (pas de 1 ms), traînée G7 (ou table importée) interpolée par PCHIP et multipliée par le CDF, calculée sur la vitesse relative à l'air ; densité de l'air et vitesse du son recalculées avec l'altitude le long de la trajectoire ; accélération de Coriolis −2Ω×v intégrée ; pesanteur normale selon la latitude. La dérive gyroscopique est ajoutée d'après le temps de vol. L'élévation est multipliée par le DSF au Mach de la balle à la cible, puis le saut aérodynamique dû au vent traversier lui est ajouté. Dévers : vu de la lunette, l'axe du canon vise à la distance R le point (dérive affichée, angle du zéro + élévation affichée − entraxe/R) ; le dévers fait tourner ce point autour de la ligne de visée, alors que la chute reste verticale ; l'écart d'impact est la différence (géométrie exacte dans le vide, contrôlée). La correction est le réglage de la lunette inclinée qui redonne au canon sa visée d'arme d'aplomb (rotation inverse) ; contrôlée par des trajectoires 3D complètes, arme tournée de 5 à 89° (traînée, vent, Coriolis, site). Non modélisé : vent variable le long de la trajectoire.</p>
       </div>
       <div>
         <h3>Calibrations</h3>
@@ -1195,7 +1195,7 @@
       </div>
       <div>
         <h3>Vérification</h3>
-        <p>64 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
+        <p>65 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
         <p>Comparé à la range card G7 d'AB Quantum avec les mêmes entrées (profil d'exemple, 1 000 m) : élévation à 0,005 mrad près jusqu'à 1 600 m, 0,07 mrad à 2 000 m ; vitesse à 0,5 m/s près. Dérive : AB Quantum compte le Coriolis horizontal par l'approximation Ω·X·sin φ·t, qui néglige le ralentissement de la balle ; avec elle, l'écart tombe à 0,005 mrad ; avec le Coriolis intégré, la dérive est plus faible de 0,01 mrad à 1 000 m et de 0,05 mrad à 2 000 m. Calibrations à 1 000 m pour 10,00 mrad : V0 838,4 m/s, CDF 0,913, DSF 0,943 à Mach 1,177, comme AB Quantum.</p>
       </div>
     </div>
@@ -1742,20 +1742,27 @@
     return (c.sens === -1 ? -1 : 1) * Math.atan2(lateral, R) * 1000;
   }
 
-  // Dévers : arme tournée de φ autour de la ligne de visée (φ > 0 : sens horaire vu du tireur, côté droit
-  // vers le bas). Vu depuis la lunette, l'axe du canon vise à la distance R le point (a, b) :
-  //   a = correction de dérive affichée, b = angle du zéro + élévation affichée − entraxe / R (rad).
-  // La rotation porte ce point en (a cos φ + b sin φ, −a sin φ + b cos φ) ; la chute, le vent, la dérive
-  // gyroscopique et Coriolis restent verticaux ou horizontaux. L'impact se déplace de la différence (vers le
-  // côté du dévers et vers le bas) ; la correction à ajouter en est l'opposé, comptée à la verticale et à
-  // l'horizontale vraies.
+  // Dévers : arme tournée de φ autour de la ligne de visée (φ > 0 : sens horaire vu du tireur, haut de l'arme
+  // vers la droite). Vu depuis la lunette, l'axe du canon vise à la distance R le point (a, b) :
+  //   a = correction de dérive affichée − zéro latéral, b = angle du zéro + élévation affichée − entraxe / R (rad).
+  // Tout ce qui est fixé à l'arme tourne avec elle : tourelles, réticule, angle du zéro, canon sous la lunette.
+  // La rotation porte ce point en (a cos φ + b sin φ, −a sin φ + b cos φ), alors que la chute, le vent, la dérive
+  // gyroscopique et Coriolis restent verticaux ou horizontaux : l'impact se déplace de la différence (vers le côté
+  // du dévers et vers le bas), comptée à la verticale et à l'horizontale vraies (impactLateralMrad, impactVerticalMrad).
+  // Correction : le réglage, dans le repère de la lunette tournée (ce qu'on affiche aux tourelles ou tient au
+  // réticule), qui redonne à l'axe du canon sa visée d'arme d'aplomb, soit la rotation inverse
+  // (a cos φ − b sin φ, a sin φ + b cos φ), moins les termes fixés à l'arme (zéro latéral ; angle du zéro − entraxe / R).
+  // Une correction comptée à la verticale et à l'horizontale vraies ne s'ajoute pas aux tourelles : à 89°, la tourelle
+  // d'élévation agit presque à l'horizontale.
   function effetDevers(prep, R, elevationMrad, deriveMrad, deversDeg) {
     const phi = deversDeg * Math.PI / 180, c = Math.cos(phi), s = Math.sin(phi);
-    const a = deriveMrad / 1000;
-    const b = prep.betaZero + elevationMrad / 1000 - prep.profil.hauteurViseurM / R;
+    const zl = prep.zeroLateral || 0, fixe = prep.betaZero - prep.profil.hauteurViseurM / R;
+    const a = deriveMrad / 1000 - zl, b = fixe + elevationMrad / 1000;
     const dx = a * (c - 1) + b * s, dy = -a * s + b * (c - 1);
+    const derive = (a * c - b * s + zl) * 1000, elevation = (a * s + b * c - fixe) * 1000;
     return { deversDeg: deversDeg, impactLateralMrad: dx * 1000, impactVerticalMrad: dy * 1000,
-      elevationMrad: elevationMrad - dy * 1000, deriveMrad: deriveMrad - dx * 1000 };
+      elevationMrad: elevation, deriveMrad: derive,
+      correctionElevationMrad: elevation - elevationMrad, correctionDeriveMrad: derive - deriveMrad };
   }
 
   function solutionPreparee(prep, distanceM, decomposition) {
@@ -2273,6 +2280,7 @@
     cdG7: cdG7,
     pchipPreparer: pchipPreparer,
     tracer: tracer,
+    acceleration: acceleration,
     contexte: contexte,
     resoudreAngle: resoudreAngle,
     constantes: { OMEGA_TERRE: OMEGA_TERRE, EXPOSANT_P: EXPOSANT_P, GRADIENT_T: GRADIENT_T,
@@ -2599,7 +2607,8 @@
     if (s.devers) {
       const dv = s.devers;
       $('r-devers-titre').textContent = 'Dévers ' + fmt(Math.abs(dv.deversDeg), 1) + '° ' + (dv.deversDeg > 0 ? 'droite' : 'gauche');
-      let t = 'corriger ' + hausse(-dv.impactVerticalMrad, 2) + ' · ' + lateral(-dv.impactLateralMrad, 2)
+      // Correction et total dans le repère de la lunette tournée : ce qu'on affiche aux tourelles ou tient au réticule.
+      let t = 'corriger ' + hausse(dv.correctionElevationMrad, 2) + ' · ' + lateral(dv.correctionDeriveMrad, 2)
         + ' → total ' + hausse(dv.elevationMrad, 2) + ' · ' + lateral(dv.deriveMrad, 2) + ' mrad';
       if (s.vent2 && s.vent2.devers) t += ' (vent 2 : ' + hausse(s.vent2.devers.elevationMrad, 2) + ' · ' + lateral(s.vent2.devers.deriveMrad, 2) + ')';
       $('r-devers-texte').textContent = t;
