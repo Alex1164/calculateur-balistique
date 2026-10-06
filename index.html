@@ -1145,7 +1145,7 @@
       </div>
       <div>
         <h3>Modèle</h3>
-        <p>Point matériel en trois dimensions intégré par Runge-Kutta d'ordre 4 (pas de 1 ms), traînée G7 (ou table importée) interpolée par PCHIP et multipliée par le CDF, calculée sur la vitesse relative à l'air ; densité de l'air et vitesse du son recalculées avec l'altitude le long de la trajectoire ; accélération de Coriolis −2Ω×v intégrée ; pesanteur normale selon la latitude. La dérive gyroscopique est ajoutée d'après le temps de vol. L'élévation est multipliée par le DSF au Mach de la balle à la cible, puis le saut aérodynamique dû au vent traversier lui est ajouté. Dévers : vu de la lunette, l'axe du canon vise à la distance R le point (dérive affichée, angle du zéro + élévation affichée − entraxe/R) ; le dévers fait tourner ce point autour de la ligne de visée, alors que la chute reste verticale ; l'écart d'impact est la différence (géométrie exacte dans le vide, contrôlée). La correction est le réglage de la lunette inclinée qui redonne au canon sa visée d'arme d'aplomb (rotation inverse) ; contrôlée par des trajectoires 3D complètes, arme tournée de 5 à 89° (traînée, vent, Coriolis, site). Non modélisé : vent variable le long de la trajectoire.</p>
+        <p>Point matériel en trois dimensions intégré par Runge-Kutta d'ordre 4 (pas de 1 ms), traînée G7 (ou table importée) interpolée par PCHIP et multipliée par le CDF, calculée sur la vitesse relative à l'air ; densité de l'air et vitesse du son recalculées avec l'altitude le long de la trajectoire ; accélération de Coriolis −2Ω×v intégrée ; pesanteur normale selon la latitude. La dérive gyroscopique est ajoutée d'après le temps de vol. L'élévation est multipliée par le DSF au Mach de la balle à la cible, puis le saut aérodynamique dû au vent traversier lui est ajouté. Dévers : vu de la lunette, l'axe du canon vise à la distance R le point (dérive affichée, angle du zéro + élévation affichée − entraxe/R) ; le dévers fait tourner ce point autour de la ligne de visée, alors que la chute reste verticale ; l'écart d'impact est la différence (géométrie exacte dans le vide, contrôlée). La correction est le réglage de la lunette inclinée qui redonne au canon sa visée d'arme d'aplomb (rotation inverse) ; contrôlée par des trajectoires 3D complètes, arme tournée de 5 à 90° (traînée, vent, Coriolis, site). Non modélisé : vent variable le long de la trajectoire.</p>
       </div>
       <div>
         <h3>Calibrations</h3>
@@ -1612,7 +1612,7 @@
       verifier(z.humiditePct >= 0 && z.humiditePct <= 100, 'Zéro : humidité entre 0 et 100 %.');
       verifier(z.tempC > -60 && z.tempC < 60, 'Zéro : température entre −60 et 60 °C.');
     }
-    verifier(tir.deversDeg === undefined || tir.deversDeg === null || Math.abs(tir.deversDeg) < 90,
+    verifier(tir.deversDeg === undefined || tir.deversDeg === null || Math.abs(tir.deversDeg) <= 90,
       'Dévers : entre −90 et 90°.');
     const v = tir.vent;
     if (v) {
