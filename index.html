@@ -266,6 +266,44 @@
   button:hover { border-color: var(--accent); }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* Blocs repliables : le titre est un bouton, le chevron pointe vers la droite quand le bloc est replié. */
+  button.pli {
+    display: inline-flex;
+    align-items: baseline; /* ligne de base du titre : alignée sur la note du bloc */
+    gap: 7px;
+    margin: 0;
+    padding: 2px 4px 2px 0;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  button.pli:hover { color: var(--accent); }
+  button.pli:hover .chevron { stroke: var(--accent); }
+  .chevron {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    align-self: center;
+    fill: none;
+    stroke: var(--sourdine);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform .15s;
+  }
+  button.pli[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+  .corps-pli { min-width: 0; }
+  .sous-bloc > .corps-pli { display: grid; gap: 10px; }
+  .aide-bloc { margin: 12px 0 0; max-width: 72ch; }
+  fieldset.replie > legend { margin-bottom: 0; }
+  section.replie > .trajectoire-tete { margin-bottom: 0; }
+
   /* Afficheur de la solution */
   .afficheur {
     background: var(--afficheur);
@@ -530,7 +568,7 @@
   <header class="entete">
     <p class="surtitre">WMLRF · application balistique · solveur v0.4</p>
     <h1>Balistique WMLRF</h1>
-    <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, cible mobile, probabilité de toucher.</p>
+    <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, décalage du zéro (Zero Height, Zero Offset), Sight Scale Factor, cible mobile, probabilité de toucher.</p>
   </header>
 
   <main class="grille">
@@ -572,6 +610,7 @@
           <dt>dont vent</dt><dd id="d-vent">—</dd>
           <dt>dont gyroscopique</dt><dd id="d-gyro">—</dd>
           <dt>dont Coriolis</dt><dd id="d-cor-h">—</dd>
+          <dt id="d-zo-lib" hidden>dont Zero Offset</dt><dd id="d-zo" hidden>—</dd>
           <dt>Saut aérodynamique</dt><dd id="d-saut">—</dd>
           <dt>Coriolis vertical</dt><dd id="d-cor-v">—</dd>
           <dt>DSF · CDF</dt><dd id="d-dsf">—</dd>
@@ -634,7 +673,8 @@
             </div>
 
             <div class="sous-bloc">
-              <p class="sous-titre">Vent</p>
+              <p class="sous-titre"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-vent"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Vent</button></p>
+              <div class="corps-pli" id="pli-vent">
               <div class="champs">
                 <div class="champ">
                   <label for="v-1">Vent 1</label>
@@ -667,10 +707,12 @@
                   <div class="saisie-unite"><input id="vz-dir" inputmode="decimal"><span class="unite">h</span></div>
                 </div>
               </div>
+              </div>
             </div>
 
             <div class="sous-bloc">
-              <p class="sous-titre">Cible mobile</p>
+              <p class="sous-titre"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-cible"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Cible mobile</button></p>
+              <div class="corps-pli" id="pli-cible">
               <div class="champs">
                 <div class="champ">
                   <label for="c-vitesse-kmh">Vitesse</label>
@@ -690,10 +732,12 @@
                   <span class="aide">avec la ligne de tir ; 90° = en travers</span>
                 </div>
               </div>
+              </div>
             </div>
 
             <div class="sous-bloc">
-              <p class="sous-titre">Tir en dévers</p>
+              <p class="sous-titre"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-devers"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Tir en dévers</button></p>
+              <div class="corps-pli" id="pli-devers">
               <div class="champs">
                 <div class="champ">
                   <label for="t-devers">Dévers</label>
@@ -709,11 +753,13 @@
                 </div>
               </div>
               <span class="aide">L'impact part du côté du dévers et un peu bas. La ligne « Dévers » de la solution donne la correction à ajouter et le total à afficher sur l'arme inclinée : tourelles et réticule tournent avec elle.</span>
+              </div>
             </div>
           </fieldset>
 
           <fieldset>
-            <legend><span class="titre-bloc">Arme et munition</span><span class="note-bloc" id="note-profil">profil fixe</span></legend>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-arme"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Arme et munition</span></button><span class="note-bloc" id="note-profil">profil fixe</span></legend>
+            <div class="corps-pli" id="pli-arme">
             <div class="sous-bloc">
               <div class="actions">
                 <span class="sous-titre" id="titre-v0">Vitesse initiale selon la température de la poudre</span>
@@ -818,10 +864,12 @@
               <p class="sortie-calcul" id="trainee-etat" role="status">—</p>
               <span class="aide">Range card avec modèle CDM : la courbe de traînée est reconstruite à partir de ses colonnes vitesse et élévation, avec ce profil (V0, zéro, entraxe) et les conditions inscrites dans le fichier. Plus le pas de la carte est fin, plus la zone transsonique est précise.</span>
             </div>
+            </div>
           </fieldset>
 
           <fieldset>
-            <legend><span class="titre-bloc">Conditions du zérotage</span><span class="note-bloc">jour où le zéro a été fait</span></legend>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-zero"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Conditions du zérotage</span></button><span class="note-bloc">jour où le zéro a été fait</span></legend>
+            <div class="corps-pli" id="pli-zero">
             <div class="actions">
               <span class="etiquette" id="lib-zero-actif">Prises en compte</span>
               <div class="segments" role="radiogroup" aria-labelledby="lib-zero-actif">
@@ -845,10 +893,48 @@
                 <div class="saisie-unite"><input id="z-humidite" inputmode="decimal"><span class="unite">%</span></div>
               </div>
             </div>
+            </div>
           </fieldset>
 
           <fieldset>
-            <legend><span class="titre-bloc">Calibrations</span><span class="note-bloc">bloc Tir = conditions du tir de calibration</span></legend>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-zh"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Décalage du zéro</span></button><span class="note-bloc">Zero Height · Zero Offset</span></legend>
+            <div class="corps-pli" id="pli-zh">
+            <div class="champs">
+              <div class="champ">
+                <label for="p-zh">Zero Height</label>
+                <div class="saisie-unite"><input id="p-zh" inputmode="decimal" placeholder="0"><span class="unite">cm</span></div>
+                <span class="aide">+ : impact au-dessus du point visé</span>
+              </div>
+              <div class="champ">
+                <label for="p-zo">Zero Offset</label>
+                <div class="saisie-unite"><input id="p-zo" inputmode="decimal" placeholder="0"><span class="unite">cm</span></div>
+                <span class="aide">+ : à droite ; − : à gauche</span>
+              </div>
+            </div>
+            <p class="aide aide-bloc">Écart du point d'impact au point visé, à la distance de zéro, quand une autre munition, un silencieux ou une optique de nuit déplace le zéro. Vide : 0. À remettre à 0 en revenant à la configuration du zéro.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-ssf"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Sight Scale Factor</span></button><span class="note-bloc">tall target test</span></legend>
+            <div class="corps-pli" id="pli-ssf">
+            <div class="champs">
+              <div class="champ">
+                <label for="p-ssf-e">SSF Elevation</label>
+                <div class="saisie-unite"><input id="p-ssf-e" inputmode="decimal" placeholder="1"><span class="unite">×</span></div>
+              </div>
+              <div class="champ">
+                <label for="p-ssf-w">SSF Windage</label>
+                <div class="saisie-unite"><input id="p-ssf-w" inputmode="decimal" placeholder="1"><span class="unite">×</span></div>
+              </div>
+            </div>
+            <p class="aide aide-bloc">Déplacement réel ÷ déplacement affiché à la tourelle : un clic de 0,12 mrad au lieu de 0,1 donne 1,2. Les réglages affichés (solution, table, export, speed drop) sont les corrections divisées par ce facteur ; l'élévation réelle des calibrations se saisit en réglage de tourelle. Vide : 1.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-calib"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Calibrations</span></button><span class="note-bloc">bloc Tir = conditions du tir de calibration</span></legend>
+            <div class="corps-pli" id="pli-calib">
             <div class="sous-bloc">
               <div class="actions">
                 <span class="etiquette" id="lib-ktype">Type</span>
@@ -878,9 +964,9 @@
                   <span class="aide">au-delà de la distance de zéro</span>
                 </div>
                 <div class="champ" id="champ-k-elev">
-                  <label for="k-elev">Élévation observée</label>
+                  <label for="k-elev">Élévation réelle</label>
                   <div class="saisie-unite"><input id="k-elev" inputmode="decimal"><span class="unite">mrad</span></div>
-                  <span class="aide">correction qui a touché</span>
+                  <span class="aide">réglage qui fait toucher : affiché − écart de l'impact (+ au-dessus)</span>
                 </div>
                 <div class="champ" id="champ-k-vit" hidden>
                   <label for="k-vit">Vitesse mesurée</label>
@@ -894,6 +980,7 @@
               </div>
               <div class="actions">
                 <button type="button" id="b-appliquer" disabled>Appliquer</button>
+                <button type="button" id="b-cdf-effacer" hidden>Effacer le CDF</button>
                 <span class="sortie-calcul" id="k-sortie" role="status"></span>
               </div>
             </div>
@@ -925,6 +1012,7 @@
                 <button type="button" id="b-dsf-effacer">Effacer le DSF</button>
               </div>
             </div>
+            </div>
           </fieldset>
 
           <div class="actions">
@@ -938,9 +1026,10 @@
 
   <section class="aides" aria-labelledby="titre-aides">
     <div class="trajectoire-tete">
-      <h2 id="titre-aides">Aides de tir</h2>
+      <h2 id="titre-aides"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-aides"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Aides de tir</button></h2>
       <span class="aide">Tir à plat, sans vent ni Coriolis, atmosphère du bloc Tir, calibrations comprises.</span>
     </div>
+    <div class="corps-pli" id="pli-aides">
     <div class="aides-grille">
       <div class="aide-outil">
         <span class="lib">Speed drop</span>
@@ -964,13 +1053,15 @@
         <span class="aide" id="a-wd-texte">—</span>
       </div>
     </div>
+    </div>
   </section>
 
   <section class="wez" aria-labelledby="titre-wez">
     <div class="trajectoire-tete">
-      <h2 id="titre-wez">Probabilité de toucher (WEZ)</h2>
+      <h2 id="titre-wez"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-wez"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Probabilité de toucher (WEZ)</button></h2>
       <span class="aide">Premier coup, point visé au centre de la cible, avec les corrections de la solution (vent 1, sans dévers ni avance).</span>
     </div>
+    <div class="corps-pli" id="pli-wez">
     <div class="wez-grille">
       <div class="wez-saisie" id="wez-saisie">
         <div class="sous-bloc">
@@ -1101,13 +1192,15 @@
         </figure>
       </div>
     </div>
+    </div>
   </section>
 
   <section class="trajectoire" aria-labelledby="titre-table">
     <div class="trajectoire-tete">
-      <h2 id="titre-table">Table de tir</h2>
+      <h2 id="titre-table"><button type="button" class="pli" aria-expanded="true" aria-controls="pli-table"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>Table de tir</button></h2>
       <span class="aide" id="table-legende">Mêmes conditions, même site, même azimut, même vent et même dévers.</span>
     </div>
+    <div class="corps-pli" id="pli-table">
     <div class="carte-reglages">
       <label for="rc-debut">De</label>
       <div class="saisie-unite"><input id="rc-debut" inputmode="decimal"><span class="unite">m</span></div>
@@ -1124,6 +1217,7 @@
         <tbody id="table-corps"></tbody>
       </table>
     </div>
+    </div>
   </section>
 
   <details class="notes">
@@ -1139,6 +1233,8 @@
           <li>Pression station : pression absolue au poste de tir, pas le QNH ramené au niveau de la mer.</li>
           <li>Zéro vertical : calculé à plat dans les conditions du zérotage, avec la V0 de sa température, sans vent ni Coriolis ; si ces conditions ne sont pas prises en compte, dans les conditions du tir.</li>
           <li>Zéro latéral : la dérive gyroscopique et le Coriolis horizontal à la distance de zéro, rattrapés au zérotage, sont retranchés de la dérive (dérive nulle à la distance de zéro, comme AB Quantum).</li>
+          <li>Zero Height, Zero Offset : écart du point d'impact au point visé à la distance de zéro (+ au-dessus ; + à droite, − à gauche), quand une autre munition, un silencieux ou une optique de nuit déplace le zéro ; le zéro est calculé pour passer par ce point.</li>
+          <li>Sight Scale Factor : déplacement réel ÷ déplacement affiché à la tourelle (tall target test). Les réglages affichés sont les corrections divisées par le SSF de leur axe : solution, vent 2, cible mobile, dévers, table, export, speed drop. Quick wind et wind dot (réticule) et WEZ restent en angle vrai.</li>
           <li>Cible mobile : avance = vitesse × sin(angle) × temps de vol / distance, du côté où la cible se déplace ; la dérive affichée ne la comprend pas, la ligne « Cible mobile » donne le total.</li>
           <li>Dévers : angle de l'arme autour de la ligne de visée, côté où penche le haut de l'arme. La ligne « Dévers » donne la correction à ajouter et le total dans le repère de la lunette inclinée (tourelles, réticule) ; élévation et dérive affichées au-dessus sont celles de l'arme d'aplomb.</li>
         </ul>
@@ -1151,9 +1247,10 @@
         <h3>Calibrations</h3>
         <ul>
           <li>Les conditions du bloc Tir doivent être celles du tir de calibration. Le DSF est ignoré pendant le calcul de la V0 et du CDF.</li>
-          <li>V0 : la loi V0 (table ou pente) est décalée d'une même valeur à toutes les températures jusqu'à ce que l'élévation calculée égale l'élévation observée ; le zéro est recalculé avec la nouvelle V0. Distance conseillée : balle entre Mach 1,3 et 1,2 à la cible (AB Quantum ; le manuel RAPTAR-S donne Mach 1,4 à 1,2).</li>
-          <li>CDF : facteur unique sur la traînée, de la bouche à la cible, cherché pour que l'élévation calculée égale l'élévation observée (chute) ou que la vitesse calculée à la cible égale la vitesse mesurée (vitesse) ; premier point conseillé vers Mach 1,2. La ligne 1 du DSF est alors placée au Mach de ce point. V0 et CDF corrigent la même zone : l'un ou l'autre.</li>
-          <li>DSF : élévation observée ÷ élévation calculée, rangé avec le Mach de la balle à cette distance, ce qui le rend valable quand les conditions changent. Distance conseillée : balle sous Mach 0,9 (AB Quantum). Chaque ligne est calculée sans les autres : l'ordre des tirs de calibration est libre.</li>
+          <li>Élévation réelle : le réglage qui fait toucher, soit le réglage affiché moins l'écart de l'impact (+ au-dessus) ; réglage de tourelle, ramené en angle vrai par le SSF Elevation.</li>
+          <li>V0 : la loi V0 (table ou pente) est décalée d'une même valeur à toutes les températures jusqu'à ce que l'élévation calculée égale l'élévation réelle ; le zéro est recalculé avec la nouvelle V0. Distance conseillée : balle entre Mach 1,3 et 1,2 à la cible (AB Quantum ; le manuel RAPTAR-S donne Mach 1,4 à 1,2).</li>
+          <li>CDF : facteur unique sur la traînée, de la bouche à la cible, cherché pour que l'élévation calculée égale l'élévation réelle (chute) ou que la vitesse calculée à la cible égale la vitesse mesurée (vitesse) ; premier point conseillé vers Mach 1,2. La ligne 1 du DSF est alors placée au Mach de ce point. V0 et CDF corrigent la même zone : l'un ou l'autre.</li>
+          <li>DSF : élévation réelle ÷ élévation calculée, rangé avec le Mach de la balle à cette distance, ce qui le rend valable quand les conditions changent. Distance conseillée : balle sous Mach 0,9 (AB Quantum). Chaque ligne est calculée sans les autres : l'ordre des tirs de calibration est libre.</li>
         </ul>
       </div>
       <div>
@@ -1185,6 +1282,7 @@
           <li>Dérive gyroscopique : SD = 1,25 (SG + 1,2) TOF<sup>1,83</sup> pouces ; saut aérodynamique : 0,01 SG − 0,0024 l + 0,032 MOA par mph de vent traversier (l en calibres) ; B. Litz, <i>Applied Ballistics for Long Range Shooting</i>.</li>
           <li>CDF et DSF : <a href="https://appliedballisticsllc.com/wp-content/uploads/2025/01/CDF.pdf" target="_blank" rel="noopener">B. Litz, The Evolution of Ballistic Calibration</a> ; manuel Wilcox RAPTAR-S, § 3.8.4 à 3.8.6 ; écrans de calibration d'AB Quantum (V0, CDF chute et vitesse, DSF).</li>
           <li>Vent 1 et vent 2 : manuel Kestrel 5700 (vent moyen et vent maximal au poste de tir).</li>
+          <li>Zero Height, Zero Offset : <a href="https://kestrelmeters.com/pages/kestrel-5700-applied-ballistics-basic-manual" target="_blank" rel="noopener">manuel Kestrel 5700 Applied Ballistics</a> ; manuel Wilcox RAPTAR-S, tableau 3.2-2b (gauche négatif, droite positif). Sight Scale Factor : <a href="https://www8.garmin.com/manuals/webhelp/foretrex601-701/EN-GB/GUID-608987B9-469A-4F9A-A5E0-AE5C1D5DC612.html" target="_blank" rel="noopener">glossaire Applied Ballistics (Garmin Foretrex 601/701)</a>.</li>
           <li>WEZ : <a href="https://appliedballisticsllc.com/wp-content/uploads/2021/06/Weapon-Employment-Zone-Analysis.pdf" target="_blank" rel="noopener">Applied Ballistics, Weapon Employment Zone Analysis</a> (principe) ; conventions d'entrée établies sur l'écran WEZ d'AB Quantum de l'auteur (probabilité et graphiques de contribution par source).</li>
           <li>Speed drop, quick wind : <a href="https://kestrelinstruments.com/mwdownloads/download/link/id/391/" target="_blank" rel="noopener">Kestrel 5700 Elite, Accuracy 1st Guidance</a> ; Accuracy 1st, <i>Short Wind Formula</i> ; <a href="https://precisionrifleguy.com/2021/12/07/speed-wind-for-the-precision-rifleman-determining-your-gun-number/" target="_blank" rel="noopener">Precision Rifle Guy, gun number</a> ; wind dot : <a href="https://www.horusvision.com/how-to-use-tremor-reticle-wind-dots/" target="_blank" rel="noopener">Horus Vision, wind dots des réticules Tremor</a>.</li>
           <li>Densité de l'air humide : <a href="https://www.nist.gov/system/files/documents/calibrations/CIPM-2007.pdf" target="_blank" rel="noopener">formule CIPM-2007</a> (Picard et al., Metrologia 45, 2008).</li>
@@ -1195,7 +1293,7 @@
       </div>
       <div>
         <h3>Vérification</h3>
-        <p>65 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
+        <p>70 contrôles internes (solutions exactes dans le vide, Coriolis, règle du retard pour le vent, vent à distance, dévers, zéros, zéro décalé, Sight Scale Factor, calibrations, table de traînée, WEZ, aides de tir). Comparé au solveur indépendant <a href="https://github.com/o-murphy/py-ballisticcalc" target="_blank" rel="noopener">py-ballisticcalc</a> sur 72 points jusqu'à 2 000 m, sans puis avec vent : écart maximal de 0,010 mrad en élévation et de 0,0002 mrad en dérive, ramené sous 0,0001 mrad en reprenant ses deux conventions (constante de vitesse du son, atmosphère figée près de la hauteur de tir).</p>
         <p>Comparé à la range card G7 d'AB Quantum avec les mêmes entrées (profil d'exemple, 1 000 m) : élévation à 0,005 mrad près jusqu'à 1 600 m, 0,07 mrad à 2 000 m ; vitesse à 0,5 m/s près. Dérive : AB Quantum compte le Coriolis horizontal par l'approximation Ω·X·sin φ·t, qui néglige le ralentissement de la balle ; avec elle, l'écart tombe à 0,005 mrad ; avec le Coriolis intégré, la dérive est plus faible de 0,01 mrad à 1 000 m et de 0,05 mrad à 2 000 m. Calibrations à 1 000 m pour 10,00 mrad : V0 838,4 m/s, CDF 0,913, DSF 0,943 à Mach 1,177, comme AB Quantum.</p>
       </div>
     </div>
@@ -1220,7 +1318,8 @@
  * Coriolis vectoriel intégré dans l'équation du mouvement, dérive gyroscopique de Litz ajoutée au
  * temps de vol, saut aérodynamique de Litz, facteur d'échelle de chute (DSF) fonction du Mach à la
  * cible, avance sur cible mobile, dévers (rotation des corrections autour de la ligne de visée),
- * zéro vertical et latéral, probabilité de toucher (WEZ).
+ * zéro vertical et latéral, zéro décalé (Zero Height, Zero Offset), Sight Scale Factor des tourelles,
+ * probabilité de toucher (WEZ).
  * Hors modèle : vent variant continûment le long de la trajectoire.
  *
  * Repère local : origine au centre de la lunette ; x horizontal dans l'azimut du tir ;
@@ -1229,6 +1328,7 @@
  * Conventions de sortie :
  *   élévation : correction de hausse par rapport au zéro, mrad, positive vers le haut ;
  *   dérive    : correction latérale, mrad, positive vers la droite (R), négative à gauche (L).
+ *   Angles vrais ; le réglage à afficher aux tourelles s'en déduit par reglageLunette (Sight Scale Factor).
  */
 (function (racine, fabrique) {
   if (typeof module === 'object' && module.exports) module.exports = fabrique();
@@ -1599,6 +1699,11 @@
     verifier(profil.distanceZeroM > 0, 'Distance de zéro : valeur positive requise.');
     verifier(profil.cdf === undefined || profil.cdf === null || (profil.cdf >= 0.3 && profil.cdf <= 3),
       'CDF : entre 0,3 et 3.');
+    const facultatif = (v, ok) => v === undefined || v === null || ok(+v);
+    verifier(facultatif(profil.zeroHauteurM, v => Math.abs(v) < 1), 'Zero Height : entre −100 et 100 cm.');
+    verifier(facultatif(profil.zeroDecalageM, v => Math.abs(v) < 1), 'Zero Offset : entre −100 et 100 cm.');
+    verifier(facultatif(profil.ssfElevation, v => v >= 0.5 && v <= 2), 'SSF Elevation : entre 0,5 et 2.');
+    verifier(facultatif(profil.ssfDerive, v => v >= 0.5 && v <= 2), 'SSF Windage : entre 0,5 et 2.');
     verifier(tir.distanceM > 0, 'Distance : valeur positive requise.');
     verifier(tir.pressionHPa > 100 && tir.pressionHPa < 1200, 'Pression : entre 100 et 1200 hPa.');
     verifier(tir.humiditePct >= 0 && tir.humiditePct <= 100, 'Humidité : entre 0 et 100 %.');
@@ -1641,6 +1746,10 @@
   // Zéro latéral (option zeroLateral) : au zérotage, le tireur ramène aussi l'impact sur l'axe vertical du
   // réticule ; la dérive gyroscopique et le Coriolis horizontal à la distance de zéro sont absorbés par ce
   // réglage et retranchés, en angle, des corrections de dérive (dérive nulle à la distance de zéro).
+  // Zéro décalé (Zero Height, Zero Offset d'Applied Ballistics : profil.zeroHauteurM, profil.zeroDecalageM, m) :
+  // à la distance de zéro, le point d'impact est à zeroHauteurM au-dessus du point visé (+ en haut) et à
+  // zeroDecalageM à droite (+ à droite, − à gauche) ; autre munition, silencieux, optique de nuit. Le zéro vertical
+  // est résolu pour passer par ce point ; le décalage latéral est retranché du zéro latéral, en angle.
   // Options : dt (pas d'intégration, s) ; coriolis, deriveGyro, sautAero, dsfActif, decomposition
   // (parts de Coriolis et du vent), zeroLateral : booléens ; gravite (m/s², sinon pesanteur normale WGS 84
   // à la latitude) ; tMax (s). Réservées aux comparaisons : decalageVertical (entraxe compté à la
@@ -1672,7 +1781,10 @@
     // Option zeroFixe { betaZero, zeroGyro, zeroCor } (rad) : réglage de l'arme imposé (WEZ : une variation de V0, de
     // traînée ou de conditions d'un coup à l'autre ne change pas le zéro fait une fois pour toutes).
     const zf = opt.zeroFixe;
-    const zeroSol = zf ? { beta: zf.betaZero } : resoudreAngle(contexte(v0Zero.v0, atmoZero, commun, null, null), profil.distanceZeroM, 0, 0);
+    const R0 = profil.distanceZeroM, zh = +profil.zeroHauteurM || 0, zo = +profil.zeroDecalageM || 0;
+    const zeroSol = zf ? { beta: zf.betaZero }
+      : resoudreAngle(contexte(v0Zero.v0, atmoZero, commun, null, null), Math.hypot(R0, zh), Math.atan2(zh, R0), 0);
+    const zeroDecalage = Math.atan2(zo, R0); // rad, + = impact à droite du point visé à la distance de zéro
 
     let zeroGyro = zf ? (zf.zeroGyro || 0) : 0, zeroCor = zf ? (zf.zeroCor || 0) : 0; // rad, déviations latérales absorbées par le zéro (+ = balle à droite)
     if (opt.zeroLateral && !zf) {
@@ -1713,7 +1825,8 @@
     const aBouche = w => (zones && zones[0].x0 <= 0) ? zones[0].W : w;
 
     return { profil: profil, tir: tir, opt: opt, g: g, commun: commun, atmo: atmo, betaZero: zeroSol.beta,
-      zeroActif: zeroActif, zeroGyro: zeroGyro, zeroCor: zeroCor, zeroLateral: zeroGyro + zeroCor,
+      zeroActif: zeroActif, zeroGyro: zeroGyro, zeroCor: zeroCor, zeroDecalage: zeroDecalage,
+      zeroLateral: zeroGyro + zeroCor - zeroDecalage,
       v0Zero: v0Zero, v0: v0, tempPoudreC: tPoudre, ctx: ctx, ctxVent2: ctxVent2,
       ctxSansCoriolis: ctxSansCoriolis, ctxSansVent: ctxSansVent, sg: sg, main: main, sensAJ: sensAJ,
       saut1: saut(aBouche(w1)), saut2: aVent2 ? saut(aBouche(w2)) : null, aVent2: aVent2, avecVent: avecVent,
@@ -1809,6 +1922,7 @@
       res.coriolisHorizMrad = prep.opt.coriolis ? -(Math.atan2(zc, R) - prep.zeroCor) * 1000 : 0;
       res.ventMrad = prep.avecVent ? -Math.atan2(p.z - zc, R) * 1000 : 0;
     }
+    res.zeroOffsetMrad = -prep.zeroDecalage * 1000; // part de la dérive due au Zero Offset
     return res;
   }
 
@@ -1830,6 +1944,30 @@
       zeroConditionsTir: !prep.zeroActif,
       zeroLateralMrad: prep.zeroLateral * 1000   // déviation absorbée par le zéro, + = balle à droite
     });
+  }
+
+  // Sight Scale Factor (Applied Ballistics, profil.ssfElevation et profil.ssfDerive) : déplacement réel de
+  // l'impact ÷ déplacement affiché à la tourelle, mesuré au tall target test (une tourelle qui affiche 10 mrad
+  // pour 9 mrad de déplacement réel a un SSF de 0,9 ; un clic de 0,12 mrad au lieu de 0,1 donne 1,2). Le réglage
+  // à afficher est la correction vraie divisée par le SSF de son axe. reglageLunette renvoie une copie de la
+  // solution (resoudre, table) avec les corrections en réglage : solution, vent 2, dévers (correction et total),
+  // cible mobile, parts de la dérive et de l'élévation. Restent en angle vrai : écarts d'impact du dévers, WEZ.
+  const SSF_ELEVATION = ['elevationMrad', 'elevationBruteMrad', 'sautAeroMrad', 'coriolisVertMrad', 'correctionElevationMrad'];
+  const SSF_DERIVE = ['deriveMrad', 'deriveTotaleMrad', 'avanceMrad', 'deriveGyroMrad', 'coriolisHorizMrad', 'ventMrad',
+    'zeroOffsetMrad', 'correctionDeriveMrad'];
+  function facteursSSF(profil) {
+    const f = v => (v === undefined || v === null || !(+v > 0)) ? 1 : +v;
+    return { elevation: f(profil && profil.ssfElevation), derive: f(profil && profil.ssfDerive) };
+  }
+  function reglageLunette(sol, profil) {
+    const f = facteursSSF(profil);
+    if (!sol || sol.erreur || (f.elevation === 1 && f.derive === 1)) return sol;
+    const r = Object.assign({}, sol);
+    for (const k of SSF_ELEVATION) if (typeof r[k] === 'number') r[k] /= f.elevation;
+    for (const k of SSF_DERIVE) if (typeof r[k] === 'number') r[k] /= f.derive;
+    if (sol.vent2) r.vent2 = reglageLunette(sol.vent2, profil);
+    if (sol.devers) r.devers = reglageLunette(sol.devers, profil);
+    return r;
   }
 
   function table(profil, tir, distances, options) {
@@ -1984,7 +2122,10 @@
     // (distance/100 − élévation) moins la tolérance, arrondi au 0,1 mrad le plus proche (x,x5 vers le bas) ;
     // plage contiguë où l'écart, arrondi au 0,1 mrad, reste dans la tolérance (|écart| ≤ tolérance + 0,05).
     // Règle qui reproduit les valeurs du Kestrel de l'auteur (2026-09-23) aux écarts de modèle près.
-    const sdv = pts.map(q => q.R / 100 - q.E);
+    // Élévation en réglage de tourelle (÷ SSF Elevation), comme la solution ; quick wind et wind dot restent en
+    // angle vrai (réticule).
+    const fSSF = facteursSSF(profil).elevation;
+    const sdv = pts.map(q => q.R / 100 - q.E / fSSF);
     let iMax = 0;
     sdv.forEach((x, i) => { if (x > sdv[iMax]) iMax = i; });
     let prime = sdv[iMax];
@@ -2264,6 +2405,8 @@
     effetDevers: effetDevers,
     aidesTir: aidesTir,
     wez: wez,
+    reglageLunette: reglageLunette,
+    facteursSSF: facteursSSF,
     sigmaSelonDistance: sigmaSelonDistance,
     reconstruireTrainee: reconstruireTrainee,
     ajouterVentDirection: ajouterVentDirection,
@@ -2309,6 +2452,7 @@
     'v0p-v': '819', 'v0p-t': '17', 'v0p-pente': '0,27',
     'p-bc': '0,309', 'p-poids': '147', 'p-diametre': '6,71', 'p-longueur': '36,4', 'p-pas': '190,5',
     'p-entraxe': '66,5', 'p-zero': '100',
+    'p-zh': '', 'p-zo': '', 'p-ssf-e': '1', 'p-ssf-w': '1',
     'z-temp': '15', 'z-pression': '1013', 'z-humidite': '0',
     'k-cdf': '1', 'k-dist': '', 'k-elev': '', 'k-vit': '',
     'dsf-m1': '1,2', 'dsf-f1': '1', 'dsf-m2': '', 'dsf-f2': '', 'dsf-m3': '', 'dsf-f3': '',
@@ -2503,6 +2647,13 @@
       if (f === null) throw new ErreurChamp($('dsf-f' + i), 'DSF manquant');
       profil.dsf.push({ mach: m, dsf: f });
     }
+    // Zéro décalé (cm à la distance de zéro, vide : 0) et Sight Scale Factor (vide : 1).
+    const cm = id => { const v = nombre(id, true); if (v !== null && !(Math.abs(v) < 100)) throw new ErreurChamp($(id), 'entre −100 et 100 cm'); return v === null ? 0 : v / 100; };
+    const ssf = id => { const v = nombre(id, true); if (v !== null && !(v >= 0.5 && v <= 2)) throw new ErreurChamp($(id), 'entre 0,5 et 2'); return v === null ? 1 : v; };
+    profil.zeroHauteurM = cm('p-zh');
+    profil.zeroDecalageM = cm('p-zo');
+    profil.ssfElevation = ssf('p-ssf-e');
+    profil.ssfDerive = ssf('p-ssf-w');
     return profil;
   }
   function lireTir() {
@@ -2550,6 +2701,7 @@
   function message(e) {
     if (e instanceof ErreurChamp) {
       e.el.setAttribute('aria-invalid', 'true');
+      ouvrirBlocs(e.el);
       return libelle(e.el) + ' : ' + e.message + '.';
     }
     return e && e.message ? e.message : String(e);
@@ -2617,6 +2769,10 @@
     $('d-vent').textContent = s.ventMrad === null ? '—' : lateral(s.ventMrad, 2) + ' mrad';
     $('d-gyro').textContent = lateral(s.deriveGyroMrad, 2) + ' mrad';
     $('d-cor-h').textContent = s.coriolisHorizMrad === null ? '—' : lateral(s.coriolisHorizMrad, 2) + ' mrad';
+    const avecZO = Math.abs(s.zeroOffsetMrad || 0) >= 0.0005;
+    $('d-zo-lib').hidden = !avecZO;
+    $('d-zo').hidden = !avecZO;
+    $('d-zo').textContent = avecZO ? lateral(s.zeroOffsetMrad, 2) + ' mrad' : '—';
     $('d-saut').textContent = fmtSigne(s.sautAeroMrad, 3) + ' mrad';
     $('d-cor-v').textContent = s.coriolisVertMrad === null ? '—' : fmtSigne(s.coriolisVertMrad, 2) + ' mrad';
     $('d-dsf').textContent = fmt(s.dsf, 4) + ' · ' + fmt(s.cdf, 4);
@@ -2629,6 +2785,14 @@
     if (s.v0Extrapolee) alertes.push('Température de poudre hors de la table : V0 extrapolée');
     if (s.sg < 1) alertes.push('SG < 1 : balle instable avec ce pas');
     if (d.profil.pasSens === -1) alertes.push('Pas à gauche : balle déviée à gauche, dérive corrigée vers R');
+    if (d.profil.zeroHauteurM || d.profil.zeroDecalageM) {
+      alertes.push('Zéro décalé : Zero Height ' + fmtSigne(100 * d.profil.zeroHauteurM, 1) + ' cm, Zero Offset '
+        + fmtSigne(100 * d.profil.zeroDecalageM, 1) + ' cm');
+    }
+    if (d.profil.ssfElevation !== 1 || d.profil.ssfDerive !== 1) {
+      alertes.push('Sight Scale Factor : réglages = corrections ÷ ' + fmt(d.profil.ssfElevation, 3) + ' (élévation) et ÷ '
+        + fmt(d.profil.ssfDerive, 3) + ' (dérive)');
+    }
     $('r-alertes').innerHTML = '';
     alertes.forEach(t => { const li = document.createElement('li'); li.textContent = t; $('r-alertes').appendChild(li); });
 
@@ -2729,12 +2893,13 @@
     let d;
     try { d = lireFormulaire(); } catch (e) { afficherErreur(e); derniere = null; return; }
     let s;
-    try { majSortieV0(d.profil); s = S().resoudre(d.profil, d.tir); } catch (e) { afficherErreur(e); derniere = null; return; }
+    try { majSortieV0(d.profil); s = S().reglageLunette(S().resoudre(d.profil, d.tir), d.profil); }
+    catch (e) { afficherErreur(e); derniere = null; return; }
     afficherSolution(s, d);
     const carte = distancesCarte(d.tir.distanceM);
     sortie('rc-sortie', carte.message, !!carte.message);
     let lignes = [];
-    try { lignes = S().table(d.profil, d.tir, carte.distances); } catch (e) { lignes = []; }
+    try { lignes = S().table(d.profil, d.tir, carte.distances).map(l => S().reglageLunette(l, d.profil)); } catch (e) { lignes = []; }
     derniere = { d: d, s: s, distances: carte.distances, lignes: lignes, wez: null };
     afficherTableCourante();
     sauver();
@@ -3015,6 +3180,8 @@
     L.push(['Pas', (p.pasSens === -1 ? 'gauche ' : 'droite ') + n(p.pasM * 1000, 1) + ' mm', 'Entraxe (mm)', n(p.hauteurViseurM * 1000, 1),
       'Zéro (m)', n(p.distanceZeroM, 0), 'Conditions du zérotage', p.zero ? n(p.zero.tempC, 1) + ' °C ' + n(p.zero.pressionHPa, 0) + ' hPa '
         + n(p.zero.humiditePct, 0) + ' %' : 'conditions du tir']);
+    L.push(['Zero Height (cm)', n(100 * (p.zeroHauteurM || 0), 1), 'Zero Offset (cm)', n(100 * (p.zeroDecalageM || 0), 1),
+      'SSF Elevation', n(p.ssfElevation || 1, 3), 'SSF Windage', n(p.ssfDerive || 1, 3), 'Réglages', 'corrections ÷ SSF']);
     L.push(['Température (°C)', n(t.tempC, 1), 'Pression (hPa)', n(t.pressionHPa, 1), 'Humidité (%)', n(t.humiditePct, 0),
       'Site (°)', n(t.siteDeg, 1), 'Azimut (°)', n(t.azimutDeg, 0), 'Latitude (°)', n(t.latitudeDeg, 1)]);
     const v = t.vent;
@@ -3120,7 +3287,8 @@
         const tir = { distanceM: 1000, siteDeg: c.siteDeg, azimutDeg: c.azimutDeg, latitudeDeg: d.tir.latitudeDeg, tempC: c.tempC,
           tempPoudreC: null, pressionHPa: c.pressionHPa, humiditePct: c.humiditePct,
           vent: c.vent1 > 0 ? { vitesse1MS: c.vent1, vitesse2MS: null, directionHeures: c.ventHeures } : null };
-        const profil = Object.assign({}, d.profil, { traineePerso: null, cdf: 1, dsf: [] });
+        const profil = Object.assign({}, d.profil, { traineePerso: null, cdf: 1, dsf: [], zeroHauteurM: 0, zeroDecalageM: 0,
+          ssfElevation: 1, ssfDerive: 1 }); // carte calculée avec le zéro et les tourelles nominaux
         const r = S().reconstruireTrainee(profil, tir, c.carte);
         const v0 = S().loiV0(profil, c.tempC).v0;
         const date = new Date();
@@ -3170,6 +3338,7 @@
     const t = typeCalibration();
     $('bloc-kmode').hidden = !(t === 'cdf' || t === 'cdf-vitesse');
     $('champ-k-cdf').hidden = !(t === 'cdf' || t === 'cdf-vitesse');
+    $('b-cdf-effacer').hidden = !(t === 'cdf' || t === 'cdf-vitesse');
     $('champ-k-elev').hidden = t === 'cdf-vitesse';
     $('champ-k-vit').hidden = t !== 'cdf-vitesse';
     $('bloc-dsf').hidden = t !== 'dsf';
@@ -3207,12 +3376,15 @@
       dist = nombre('k-dist', true);
       obs = nombre(t === 'cdf-vitesse' ? 'k-vit' : 'k-elev', true);
     } catch (e) { afficherCalibration('—', '—', message(e)); return; }
+    // Élévation réelle : réglage de tourelle ; le calcul la veut en angle vrai (× SSF Elevation).
+    const fSSF = S().facteursSSF(d.profil).elevation;
+    if (obs !== null && t !== 'cdf-vitesse') obs *= fSSF;
     let actuel = '—';
     try {
       if (t === 'v0') actuel = fmt(S().loiV0(d.profil, d.tir.tempPoudreC === null ? d.tir.tempC : d.tir.tempPoudreC).v0, 1) + ' m/s';
       else if (t !== 'dsf') actuel = fmt(d.profil.cdf, 3);
     } catch (e) { /* loi V0 incomplète : signalée par le calcul principal */ }
-    if (dist === null || obs === null) { afficherCalibration(actuel, '—', ''); return; }
+    if (dist === null || obs === null) { afficherCalibration(actuel, '—', ''); montrerApplique(); return; }
     try {
       if (t === 'v0') {
         const r = S().calibrerV0(d.profil, d.tir, dist, obs);
@@ -3229,9 +3401,12 @@
         const r = S().calibrerDSF(d.profil, d.tir, dist, obs);
         calibration = { type: t, r: r };
         afficherCalibration(fmt(r.mach, 3), fmt(r.dsf, 3), '');
-        sortie('k-sortie', 'Élévation calculée sans DSF : ' + fmt(r.elevationCalculeeMrad, 2) + ' mrad.', false);
+        sortie('k-sortie', 'Élévation calculée sans DSF : ' + fmt(r.elevationCalculeeMrad / fSSF, 2) + ' mrad.', false);
       }
     } catch (e) { calibration = null; afficherCalibration(actuel, '—', message(e)); }
+    montrerApplique();
+  }
+  function montrerApplique() { // message du dernier « Appliquer » ou « Effacer », montré une fois
     if (messageApplique) { sortie('k-sortie', messageApplique, false); messageApplique = ''; }
   }
   function planifierCalibration() { clearTimeout(minuterieCalibration); minuterieCalibration = setTimeout(calculerCalibration, 250); }
@@ -3274,6 +3449,11 @@
     } catch (e) { sortie('k-sortie', message(e), true); }
   }
   $('b-appliquer').addEventListener('click', appliquerCalibration);
+  $('b-cdf-effacer').addEventListener('click', () => {
+    $('k-cdf').value = '1';
+    messageApplique = 'CDF effacé : facteur 1.';
+    calculer();
+  });
   $('b-dsf-effacer').addEventListener('click', () => {
     for (let i = 1; i <= 6; i++) { $('dsf-m' + i).value = ''; $('dsf-f' + i).value = ''; }
     $('dsf-m1').value = '1,2';
@@ -3326,6 +3506,34 @@
       .observe($('afficheur'));
   }
   if (etroit.addEventListener) etroit.addEventListener('change', majBarre);
+
+  // ----- blocs repliables -----
+  // Chaque bouton .pli replie ou déplie le bloc qu'il désigne (aria-controls) ; l'état reste dans ce navigateur.
+  // Un bloc replié se rouvre quand un de ses champs est en erreur.
+  const CLE_PLIS = 'wmlrf-balistique-plis';
+  let plis = {};
+  try { plis = JSON.parse(localStorage.getItem(CLE_PLIS)) || {}; } catch (e) { plis = {}; }
+  function plier(bouton, ouvert, memoriser) {
+    const corps = $(bouton.getAttribute('aria-controls'));
+    bouton.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+    corps.hidden = !ouvert;
+    const bloc = bouton.closest('fieldset, section, .sous-bloc');
+    if (bloc) bloc.classList.toggle('replie', !ouvert);
+    if (!memoriser) return;
+    if (ouvert) delete plis[corps.id]; else plis[corps.id] = false;
+    try { localStorage.setItem(CLE_PLIS, JSON.stringify(plis)); } catch (e) { /* stockage indisponible */ }
+  }
+  function ouvrirBlocs(el) {
+    for (let c = el ? el.closest('.corps-pli') : null; c; c = c.parentElement ? c.parentElement.closest('.corps-pli') : null) {
+      if (!c.hidden) continue;
+      const b = document.querySelector('button.pli[aria-controls="' + c.id + '"]');
+      if (b) plier(b, true, true);
+    }
+  }
+  document.querySelectorAll('button.pli').forEach(b => {
+    if (plis[b.getAttribute('aria-controls')] === false) plier(b, false, false);
+    b.addEventListener('click', () => plier(b, b.getAttribute('aria-expanded') !== 'true', true));
+  });
 
   // Un état enregistré par une version précédente ne contient pas les nouveaux champs : ils prennent
   // des valeurs neutres (pas de vent, cible fixe, arme d'aplomb, pas de calibration en cours), jamais
