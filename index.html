@@ -294,6 +294,19 @@
   }
   button:hover { border-color: var(--accent); }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* Lien présenté comme un bouton (page de l'appareil). */
+  a.bouton {
+    display: inline-block;
+    font: 500 14px/1 var(--police);
+    color: var(--encre);
+    background: var(--panneau);
+    border: 1px solid var(--trait-fort);
+    border-radius: 7px;
+    padding: 10px 14px;
+    text-decoration: none;
+  }
+  a.bouton:hover { border-color: var(--accent); }
+  a.bouton:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Blocs repliables : le titre est un bouton, le chevron pointe vers la droite quand le bloc est replié. */
   button.pli {
@@ -595,7 +608,7 @@
   </p>
 </noscript>
   <header class="entete">
-    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.1.0</span></p>
+    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.1.1</span></p>
     <h1>Balistique WMLRF</h1>
     <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, décalage du zéro (Zero Height, Zero Offset), Sight Scale Factor, cible mobile, probabilité de toucher.</p>
   </header>
@@ -1056,6 +1069,7 @@
               <div class="actions">
                 <p class="sortie-calcul sortie-ap" id="ap-etat" role="status">—</p>
                 <button type="button" id="ap-actualiser">Actualiser</button>
+                <a class="bouton" id="ap-page" href="http://192.168.4.1/" hidden>Ouvrir la page de l'appareil</a>
               </div>
             </div>
             <div class="sous-bloc">
@@ -1321,6 +1335,7 @@
       <div>
         <h3>Versions</h3>
         <ul id="versions">
+          <li data-version="1.1.1"><b>1.1.1</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : « Actualiser » affiche la lecture en cours, puis l'appareil relié ou la cause de l'échec ; page ouverte ailleurs que sur l'appareil : bouton « Ouvrir la page de l'appareil ».</li>
           <li data-version="1.1.0"><b>1.1.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : profils envoyés à l'appareil par son Wi-Fi, repris dans la page ou effacés ; latitude et déclinaison envoyées ; mise à jour de l'appareil.</li>
           <li data-version="1.0.0"><b>1.0.0</b> · 19 octobre 2026 : Zero Height et Zero Offset ; Sight Scale Factor ; « élévation réelle » dans les calibrations ; bouton « Effacer le CDF » ; blocs repliables ; numéro de version et avis de mise à jour.</li>
           <li><b>0.4</b> · 23 septembre au 6 octobre 2026 : vent à distance ; traînée importée d'une range card CDM ; probabilité de toucher (WEZ) ; export de la range card ; précision de télémétrie par tranches ; correction du dévers dans le repère de la lunette, jusqu'à 90°.</li>
@@ -1447,7 +1462,7 @@
   // modification publiée ; nouvelle fonction : mineur ; correction ou texte : correctif ; profil enregistré ou données
   // échangées avec l'appareil devenus incompatibles : majeur. Ajouter la ligne correspondante à la liste des versions
   // de calculateur.html (avis de mise à jour).
-  const VERSION = '1.1.0';
+  const VERSION = '1.1.1';
 
   // ---------------------------------------------------------------------------
   // Constantes et sources
@@ -3629,24 +3644,40 @@
   const PROFIL_CHAMPS = IDS.filter(id => /^(v0-|v0p-|p-|z-|dsf-)/.test(id) || id === 'k-cdf' || id === 'trainee-json');
   const PROFIL_RADIOS = ['unite', 'sens', 'modev0', 'zeroactif', 'trainee'];
   const NOM_OCTETS_MAX = 23;   // nom gardé par l'appareil (firmware.md)
-  const RELIE_NON = 'Non relié : ouvrir cette page depuis l\'appareil (menu Wi-Fi, téléphone relié à son réseau, adresse http://192.168.4.1/).';
+  // L'appareil sert sa page en HTTP (http://192.168.4.1/) : une page publiée en HTTPS ou ouverte depuis un fichier
+  // interroge son propre serveur, jamais l'appareil ; elle propose d'ouvrir la page de l'appareil.
+  const SERVIE_PAR_APPAREIL = location.protocol === 'http:';
+  const DELAI_APPAREIL_MS = 8000;   // sans réponse dans ce délai, la demande est abandonnée
+  const LECTURE_MIN_MS = 400;       // « Lecture de l'appareil… » reste visible au moins ce temps
+  const WIFI_A_VOIR = 'Écran Wi-Fi de l\'appareil ouvert et téléphone relié à son réseau ?';
+  const HORS_APPAREIL = 'Non relié : cette page ne vient pas de l\'appareil, qui n\'échange qu\'avec la sienne. Ouvrir l\'écran '
+    + 'Wi-Fi de l\'appareil, relier le téléphone à son réseau (nom et mot de passe à l\'écran), puis ouvrir sa page, http://192.168.4.1/.';
   let appareil = null;         // dernière réponse de GET /api/v0/appareil
   let confirmationEffacer = null;
   const octets = s => new TextEncoder().encode(s).length;
+  const pause = ms => new Promise(r => setTimeout(r, ms));
 
   async function demander(methode, chemin, corps) {
-    let rep;
+    const arret = new AbortController();
+    const minuterieArret = setTimeout(() => arret.abort(), DELAI_APPAREIL_MS);
     try {
-      rep = await fetch(API + chemin, { method: methode, body: corps, cache: 'no-store',
-        headers: corps === undefined ? undefined : { 'Content-Type': 'application/json' } });
-    } catch (e) {
-      throw new Error('appareil injoignable (téléphone relié au Wi-Fi de l\'appareil ?)');
+      let rep;
+      try {
+        rep = await fetch(API + chemin, { method: methode, body: corps, cache: 'no-store', signal: arret.signal,
+          headers: corps === undefined ? undefined : { 'Content-Type': 'application/json' } });
+      } catch (e) {
+        throw new Error((arret.signal.aborted ? 'pas de réponse en ' + DELAI_APPAREIL_MS / 1000 + ' s'
+          : 'appareil injoignable') + '. ' + WIFI_A_VOIR);
+      }
+      if (rep.status === 204) return null;
+      let json = null;
+      try { json = await rep.json(); } catch (e) { json = null; }
+      if (arret.signal.aborted) throw new Error('réponse interrompue après ' + DELAI_APPAREIL_MS / 1000 + ' s. ' + WIFI_A_VOIR);
+      if (!rep.ok) throw new Error((json && json.erreur ? json.erreur : 'refus') + ' (' + rep.status + ')');
+      return json;
+    } finally {
+      clearTimeout(minuterieArret);
     }
-    if (rep.status === 204) return null;
-    let json = null;
-    try { json = await rep.json(); } catch (e) { json = null; }
-    if (!rep.ok) throw new Error((json && json.erreur ? json.erreur : 'refus') + ' (' + rep.status + ')');
-    return json;
   }
   function majBoutonsAppareil() {
     const relie = !!appareil, rang = Number($('ap-rang').value);
@@ -3675,17 +3706,25 @@
     return 0;
   }
   async function actualiserAppareil(rangChoisi) {
+    const b = $('ap-actualiser'), debut = Date.now();
+    let texte, echec = false;
+    b.disabled = true;
+    sortie('ap-etat', 'Lecture de l\'appareil…', false);
     try {
       const a = await demander('GET', 'appareil');
-      if (!a || a.protocole !== 0 || !Array.isArray(a.profils)) throw new Error('réponse inattendue');
-      appareil = a;
+      if (!a || a.protocole !== 0 || !Array.isArray(a.profils) || !a.lieu) throw new Error('réponse inattendue, protocole v0 attendu');
       const n = a.profils.length;
-      $('ap-etat').textContent = 'Relié : ' + a.version + ' · ' + n + (n > 1 ? ' profils' : ' profil') + ' sur ' + a.profilsMax
+      texte = 'Relié : ' + a.version + ' · ' + n + (n > 1 ? ' profils' : ' profil') + ' sur ' + a.profilsMax
         + ' · latitude ' + fmt(a.lieu.latitude, 2) + '°, déclinaison ' + fmt(a.lieu.declinaison, 1) + '°';
+      appareil = a;
     } catch (e) {
       appareil = null;
-      $('ap-etat').textContent = RELIE_NON;
+      texte = 'Non relié : ' + message(e);
+      echec = true;
     }
+    await pause(Math.max(0, LECTURE_MIN_MS - (Date.now() - debut)));
+    sortie('ap-etat', texte, echec);
+    b.disabled = false;
     remplirRangs(rangChoisi !== undefined ? rangChoisi : rangConseille());
     majBoutonsAppareil();
   }
@@ -3879,7 +3918,12 @@
   majLatitudeAppareil();
   remplirRangs(0);
   majBoutonsAppareil();
-  if (location.protocol === 'http:') actualiserAppareil(); else $('ap-etat').textContent = RELIE_NON;
+  if (SERVIE_PAR_APPAREIL) actualiserAppareil();
+  else {
+    sortie('ap-etat', HORS_APPAREIL, false);
+    $('ap-actualiser').hidden = true;
+    $('ap-page').hidden = false;
+  }
 })();
 </script>
 
