@@ -635,7 +635,7 @@
   </p>
 </noscript>
   <header class="entete">
-    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.1.2</span></p>
+    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.3.0</span></p>
     <h1>Balistique WMLRF</h1>
     <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, décalage du zéro (Zero Height, Zero Offset), Sight Scale Factor, cible mobile, probabilité de toucher.</p>
   </header>
@@ -645,11 +645,19 @@
     <button type="button" id="maj-ok">OK</button>
   </div>
 
+  <div class="maj" id="recus" role="status" hidden>
+    <p><strong id="recus-titre">Profils reçus</strong><span id="recus-texte"></span></p>
+    <div class="actions">
+      <button type="button" id="recus-ajouter">Ajouter à cette page</button>
+      <button type="button" id="recus-fermer">Ignorer</button>
+    </div>
+  </div>
+
   <main class="grille">
     <aside class="resultat" aria-label="Solution de tir">
       <div class="afficheur" id="afficheur">
         <div class="afficheur-tete">
-          <strong>Solution</strong>
+          <strong id="r-profil">Solution</strong>
           <span id="r-titre">—</span>
         </div>
         <div class="mesures" aria-live="polite">
@@ -828,6 +836,39 @@
               </div>
               <span class="aide">L'impact part du côté du dévers et un peu bas. La ligne « Dévers » de la solution donne la correction à ajouter et le total à afficher sur l'arme inclinée : tourelles et réticule tournent avec elle.</span>
               </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-profils"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Profils</span></button><span class="note-bloc">gardés dans ce navigateur</span></legend>
+            <div class="corps-pli" id="pli-profils">
+            <div class="sous-bloc">
+              <div class="champs">
+                <div class="champ">
+                  <label for="pr-liste">Profil affiché</label>
+                  <div class="saisie-unite"><select id="pr-liste"></select></div>
+                </div>
+                <div class="champ">
+                  <label for="pr-nom">Nom</label>
+                  <div class="saisie-unite"><input id="pr-nom" maxlength="23" autocomplete="off" spellcheck="false"></div>
+                  <span class="aide">16 caractères environ à l'écran de l'appareil</span>
+                </div>
+              </div>
+              <div class="actions">
+                <button type="button" id="pr-nouveau">Nouveau profil</button>
+                <button type="button" id="pr-supprimer">Supprimer</button>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="pr-sortie" role="status"></p>
+              <span class="aide">Un profil réunit les blocs qui suivent : arme et munition, zérotage, décalage du zéro, Sight Scale Factor, CDF, DSF et table de traînée importée. Chaque modification y est gardée aussitôt. « Nouveau profil » part d'une copie du profil affiché.</span>
+            </div>
+            <div class="sous-bloc" id="pr-bloc-transfert" hidden>
+              <p class="sous-titre">Vers la page de l'appareil</p>
+              <div class="actions">
+                <a class="bouton" id="pr-transferer" href="http://192.168.4.1/">Transférer les profils</a>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="pr-sortie-transfert" role="status"></p>
+              <span class="aide">La page de l'appareil a sa propre liste. Écran Wi-Fi de l'appareil ouvert et téléphone relié à son réseau, ce bouton ouvre sa page avec tous les profils de celle-ci ; elle propose de les ajouter, un profil de même nom étant remplacé.</span>
+            </div>
             </div>
           </fieldset>
 
@@ -1103,9 +1144,9 @@
               <p class="sous-titre">Profils</p>
               <div class="champs">
                 <div class="champ">
-                  <label for="ap-nom">Nom du profil</label>
-                  <div class="saisie-unite"><input id="ap-nom" maxlength="23" autocomplete="off" spellcheck="false"></div>
-                  <span class="aide">16 caractères environ à l'écran de l'appareil</span>
+                  <span class="etiquette">Profil affiché</span>
+                  <span class="valeur-fixe" id="ap-profil">—</span>
+                  <span class="aide">celui du bloc Profils</span>
                 </div>
                 <div class="champ">
                   <label for="ap-rang">Emplacement</label>
@@ -1114,11 +1155,12 @@
               </div>
               <div class="actions">
                 <button type="button" id="ap-envoyer">Envoyer ce profil</button>
+                <button type="button" id="ap-envoyer-tous">Envoyer tous les profils</button>
                 <button type="button" id="ap-reprendre">Reprendre dans la page</button>
                 <button type="button" id="ap-effacer">Effacer de l'appareil</button>
               </div>
               <p class="sortie-calcul sortie-ap" id="ap-sortie-profil" role="status"></p>
-              <span class="aide">Le profil envoyé est celui de la page : arme et munition, conditions du zérotage, décalage du zéro, Sight Scale Factor, CDF, DSF et table de traînée importée. L'appareil le garde et le propose au menu par son nom.</span>
+              <span class="aide">« Envoyer ce profil » : le profil affiché, à l'emplacement choisi. « Envoyer tous les profils » : ceux du bloc Profils, chacun à l'emplacement de même nom, sinon au premier libre. L'appareil les garde et les propose au menu par leur nom. « Reprendre dans la page » ajoute le profil de l'emplacement au bloc Profils, ou remplace celui de même nom.</span>
             </div>
             <div class="sous-bloc">
               <p class="sous-titre">Lieu</p>
@@ -1138,6 +1180,18 @@
                 <button type="button" id="ap-lieu">Envoyer le lieu</button>
               </div>
               <p class="sortie-calcul sortie-ap" id="ap-sortie-lieu" role="status"></p>
+            </div>
+            <div class="sous-bloc">
+              <p class="sous-titre">Page de l'appareil</p>
+              <p class="sortie-calcul sortie-ap" id="ap-page-etat" role="status"></p>
+              <div class="actions">
+                <input type="file" id="ap-page-fichier" accept=".html,.htm,.gz,text/html,application/gzip">
+                <button type="button" id="ap-page-envoyer">Envoyer la page</button>
+                <button type="button" id="ap-page-programme">Revenir à la page du programme</button>
+                <a class="bouton" id="ap-page-ouvrir" href="/" hidden>Ouvrir la page servie</a>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="ap-sortie-page" role="status"></p>
+              <span class="aide">Page à envoyer : « index.html » du dossier site/, ou sa version .gz ; pas calculateur.html, qui a besoin de solveur.js. Compressée avant l'envoi si besoin, elle remplace celle du programme de l'appareil, mises à jour comprises, jusqu'à « Revenir à la page du programme ». Celle du programme reste à http://192.168.4.1/?page=programme.</span>
             </div>
             <div class="sous-bloc">
               <p class="sous-titre">Mise à jour de l'appareil</p>
@@ -1362,6 +1416,8 @@
       <div>
         <h3>Versions</h3>
         <ul id="versions">
+          <li data-version="1.3.0"><b>1.3.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : page de l'appareil servie (origine, taille), envoi d'une nouvelle page sans nouvelle version de son programme, retour à la page du programme.</li>
+          <li data-version="1.2.0"><b>1.2.0</b> · 18 novembre 2026 : bloc « Profils » : plusieurs profils dans la page, choisis, renommés, copiés ou supprimés, chaque modification gardée aussitôt ; nom du profil en tête de la solution ; « Envoyer tous les profils » à l'appareil ; depuis la page publiée, « Transférer les profils » vers la page de l'appareil.</li>
           <li data-version="1.1.2"><b>1.1.2</b> · 18 novembre 2026 : polices IBM Plex intégrées à la page : mêmes polices sans internet, sur l'appareil comme hors ligne ; plus aucune ressource chargée d'un autre site.</li>
           <li data-version="1.1.1"><b>1.1.1</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : « Actualiser » affiche la lecture en cours, puis l'appareil relié ou la cause de l'échec ; page ouverte ailleurs que sur l'appareil : bouton « Ouvrir la page de l'appareil ».</li>
           <li data-version="1.1.0"><b>1.1.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : profils envoyés à l'appareil par son Wi-Fi, repris dans la page ou effacés ; latitude et déclinaison envoyées ; mise à jour de l'appareil.</li>
@@ -1490,7 +1546,7 @@
   // modification publiée ; nouvelle fonction : mineur ; correction ou texte : correctif ; profil enregistré ou données
   // échangées avec l'appareil devenus incompatibles : majeur. Ajouter la ligne correspondante à la liste des versions
   // de calculateur.html (avis de mise à jour).
-  const VERSION = '1.1.2';
+  const VERSION = '1.3.0';
 
   // ---------------------------------------------------------------------------
   // Constantes et sources
@@ -2607,7 +2663,7 @@
     'p-bc': '0,309', 'p-poids': '147', 'p-diametre': '6,71', 'p-longueur': '36,4', 'p-pas': '190,5',
     'p-entraxe': '66,5', 'p-zero': '100',
     'p-zh': '', 'p-zo': '', 'p-ssf-e': '1', 'p-ssf-w': '1',
-    'ap-nom': '', 'ap-dec': '',
+    'ap-dec': '',
     'z-temp': '15', 'z-pression': '1013', 'z-humidite': '0',
     'k-cdf': '1', 'k-dist': '', 'k-elev': '', 'k-vit': '',
     'dsf-m1': '1,2', 'dsf-f1': '1', 'dsf-m2': '', 'dsf-f2': '', 'dsf-m3': '', 'dsf-f3': '',
@@ -2631,6 +2687,7 @@
   const IDS = Object.keys(EXEMPLE).filter(k => RADIOS.indexOf(k) < 0);
   const $ = id => document.getElementById(id);
   let uniteCourante = 'in';
+  let profils = null;   // liste des profils de la page, chargée au démarrage (bloc Profils)
 
   function fmt(n, d) {
     return n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -2682,6 +2739,7 @@
   }
   function sauver() {
     try { localStorage.setItem(CLE, JSON.stringify(lireEtat())); } catch (e) { /* stockage indisponible */ }
+    majProfilCourant();
   }
   function charger(cle) {
     try { const t = localStorage.getItem(cle); return t ? JSON.parse(t) : null; } catch (e) { return null; }
@@ -3620,7 +3678,8 @@
   // ----- événements -----
   document.getElementById('formulaire').addEventListener('input', e => {
     if (RADIOS.indexOf(e.target.name) >= 0) return;
-    if (/^ap-/.test(e.target.id)) { if (e.target.id !== 'ap-fichier') sauver(); return; } // bloc Appareil : rien à recalculer
+    if (/^pr-/.test(e.target.id)) return; // bloc Profils : nom et choix traités à la fin de la saisie (change)
+    if (/^ap-/.test(e.target.id)) { if (!/fichier$/.test(e.target.id)) sauver(); return; } // bloc Appareil : rien à recalculer
     if (CHAMPS_CALIBRATION.indexOf(e.target.id) >= 0) { sauver(); planifierCalibration(); return; }
     planifier();
   });
@@ -3647,8 +3706,16 @@
   });
   ['rc-debut', 'rc-fin', 'rc-pas'].forEach(id => $(id).addEventListener('input', planifier));
   document.getElementById('formulaire').addEventListener('submit', e => { e.preventDefault(); calculer(); });
+  // Exemple : conditions de l'exemple et profil « Exemple 6,5 CM », ajouté ou remis à ses valeurs, sans toucher aux
+  // autres profils (leur table importée comprise).
   document.getElementById('b-exemple').addEventListener('click', () => {
-    ecrireEtat(Object.assign({}, EXEMPLE, { 'trainee-json': $('trainee-json').value })); // la table importée est conservée
+    const etat = etatProfil(EXEMPLE);
+    let p = profils.profils.find(x => x.nom === NOM_EXEMPLE);
+    if (p) p.etat = etat; else { p = { id: nouvelId(), nom: NOM_EXEMPLE, etat: etat }; profils.profils.push(p); }
+    profils.courant = p.id;
+    garderProfils();
+    ecrireEtat(EXEMPLE);
+    afficherProfils();
     calculer();
   });
 
@@ -3663,15 +3730,271 @@
   }
   if (etroit.addEventListener) etroit.addEventListener('change', majBarre);
 
+  // ----- profils de la page -----
+  // Liste gardée dans ce navigateur : { v: 1, courant, profils: [{ id, nom, etat }] }. « etat » : les champs du profil
+  // (PROFIL_CHAMPS, PROFIL_RADIOS), comme dans l'enregistrement envoyé à l'appareil. Le profil affiché suit la page :
+  // sauver() y recopie ses champs, sans action « enregistrer ». Noms uniques dans la liste, 23 octets au plus.
+  const PROFIL_CHAMPS = IDS.filter(id => /^(v0-|v0p-|p-|z-|dsf-)/.test(id) || id === 'k-cdf' || id === 'trainee-json');
+  const PROFIL_RADIOS = ['unite', 'sens', 'modev0', 'zeroactif', 'trainee'];
+  const VALEURS_RADIOS = {};
+  PROFIL_RADIOS.forEach(n => {
+    VALEURS_RADIOS[n] = Array.from(document.querySelectorAll('input[name="' + n + '"]')).map(i => i.value);
+  });
+  const NOM_OCTETS_MAX = 23;   // nom gardé par l'appareil (firmware.md)
+  const CLE_PROFILS = 'wmlrf-balistique-profils';
+  const NOM_EXEMPLE = 'Exemple 6,5 CM';
+  const octets = s => new TextEncoder().encode(s).length;
+  const nouvelId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const profilCourant = () => profils.profils.find(p => p.id === profils.courant);
+  const parNom = liste => liste.slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { numeric: true }));
+  const nombreProfils = n => n + (n > 1 ? ' profils' : ' profil');
+  const phrase = t => /[.?!…]$/.test(t) ? t : t + '.';  // point final, sauf si la phrase en a un
+
+  function texteErreur(e) { // comme message(), sans marquer de champ en erreur
+    if (e instanceof ErreurChamp) return libelle(e.el) + ' : ' + e.message;
+    return e && e.message ? e.message : String(e);
+  }
+  function etatProfil(e) { // champs du profil d'un état, en texte ; choix inconnu : celui de l'exemple
+    const r = {};
+    PROFIL_CHAMPS.forEach(k => { r[k] = e && e[k] !== undefined && e[k] !== null ? String(e[k]) : ''; });
+    PROFIL_RADIOS.forEach(k => { r[k] = e && VALEURS_RADIOS[k].indexOf(String(e[k])) >= 0 ? String(e[k]) : EXEMPLE[k]; });
+    return r;
+  }
+  function nomNettoye(s) { // caractères de commande retirés, espaces aux bouts
+    return String(s === undefined || s === null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, '').trim();
+  }
+  function erreurNom(nom, idExclu) {
+    if (!nom) return 'nom requis';
+    if (octets(nom) > NOM_OCTETS_MAX) return NOM_OCTETS_MAX + ' octets au plus, une lettre accentuée en comptant 2';
+    if (profils.profils.some(p => p.id !== idExclu && p.nom === nom)) return 'déjà le nom d\'un autre profil';
+    return null;
+  }
+  function nomLibre(base) { // base, sinon base suivie du premier numéro libre, raccourcie pour tenir en 23 octets
+    const pris = new Set(profils.profils.map(p => p.nom));
+    if (!pris.has(base)) return base;
+    const m = /^(.*\S) (\d+)$/.exec(base);
+    const racine = m ? m[1] : base;
+    for (let i = m ? Number(m[2]) + 1 : 2; ; i++) {
+      const suffixe = ' ' + i, b = Array.from(racine);
+      while (b.length && octets(b.join('') + suffixe) > NOM_OCTETS_MAX) b.pop();
+      const nom = b.join('').trim() + suffixe;
+      if (!pris.has(nom)) return nom;
+    }
+  }
+  function chargerProfils() {
+    let o = null;
+    try { o = JSON.parse(localStorage.getItem(CLE_PROFILS)); } catch (e) { o = null; }
+    if (!o || o.v !== 1 || !Array.isArray(o.profils)) return null;
+    const liste = [];
+    o.profils.forEach(p => {
+      if (!p || typeof p.id !== 'string' || !p.etat || typeof p.etat !== 'object') return;
+      const nom = nomNettoye(p.nom);
+      if (!nom || liste.some(x => x.nom === nom || x.id === p.id)) return;
+      liste.push({ id: p.id, nom: nom, etat: etatProfil(p.etat) });
+    });
+    if (!liste.length) return null;
+    return { courant: liste.some(p => p.id === o.courant) ? o.courant : parNom(liste)[0].id, profils: liste };
+  }
+  function garderProfils() {
+    try { localStorage.setItem(CLE_PROFILS, JSON.stringify({ v: 1, courant: profils.courant, profils: profils.profils })); }
+    catch (e) { /* stockage indisponible : liste gardée le temps de la page */ }
+  }
+  function majProfilCourant() { // appelée par sauver()
+    if (!profils) return;
+    const p = profilCourant(), etat = etatProfil(lireEtat());
+    if (JSON.stringify(etat) === JSON.stringify(p.etat)) return;
+    p.etat = etat;
+    garderProfils();
+  }
+  function afficherProfils() {
+    const sel = $('pr-liste'), p = profilCourant();
+    sel.innerHTML = '';
+    parNom(profils.profils).forEach(x => {
+      const o = document.createElement('option');
+      o.value = x.id;
+      o.textContent = x.nom;
+      sel.appendChild(o);
+    });
+    sel.value = p.id;
+    $('pr-nom').value = p.nom;
+    $('pr-nom').removeAttribute('aria-invalid');
+    $('pr-supprimer').disabled = profils.profils.length < 2;
+    $('ap-profil').textContent = p.nom;
+    $('r-profil').textContent = p.nom;
+  }
+  function profilsChanges() { // liste ou profil affiché changés ; emplacement conseillé sur l'appareil recalculé
+    afficherProfils();
+    if (appareil) { remplirRangs(rangConseille()); majBoutonsAppareil(); }
+  }
+  function choisirProfil(id) {
+    if (!profils.profils.some(p => p.id === id)) return;
+    profils.courant = id;
+    garderProfils();
+    ecrireEtat(Object.assign(lireEtat(), profilCourant().etat));
+    profilsChanges();
+    calculer();
+  }
+  function renommerProfil() {
+    const el = $('pr-nom'), p = profilCourant(), nom = nomNettoye(el.value);
+    el.removeAttribute('aria-invalid');
+    const err = erreurNom(nom, p.id);
+    if (err) { el.setAttribute('aria-invalid', 'true'); sortie('pr-sortie', 'Nom : ' + err + '.', true); return; }
+    sortie('pr-sortie', '', false);
+    if (nom === p.nom) { el.value = nom; return; }
+    const ancien = p.nom;
+    p.nom = nom;
+    garderProfils();
+    profilsChanges();
+    sortie('pr-sortie', 'Profil « ' + ancien + ' » renommé « ' + nom + ' ».', false);
+  }
+  function nouveauProfil() { // copie du profil affiché, tel qu'il est dans la page
+    const p = profilCourant(), copie = { id: nouvelId(), nom: nomLibre(p.nom), etat: etatProfil(lireEtat()) };
+    profils.profils.push(copie);
+    profils.courant = copie.id;
+    garderProfils();
+    profilsChanges();
+    sortie('pr-sortie', 'Profil « ' + copie.nom + ' » créé, copie de « ' + p.nom + ' » : le renommer, puis changer ses champs.', false);
+    $('pr-nom').focus();
+    $('pr-nom').select();
+  }
+  // Confirmation par un second appui dans les 5 s, sur la même cible (clé).
+  const confirmations = new Map();
+  function confirme(bouton, cle, texteConfirmation) {
+    const c = confirmations.get(bouton);
+    if (c) {
+      clearTimeout(c.minuterie);
+      bouton.textContent = c.texte;
+      confirmations.delete(bouton);
+      if (c.cle === cle) return true;
+    }
+    const texte = bouton.textContent;
+    bouton.textContent = texteConfirmation;
+    confirmations.set(bouton, { cle: cle, texte: texte,
+      minuterie: setTimeout(() => { bouton.textContent = texte; confirmations.delete(bouton); }, 5000) });
+    return false;
+  }
+  function supprimerProfil() {
+    const p = profilCourant();
+    if (profils.profils.length < 2 || !confirme($('pr-supprimer'), p.id, 'Confirmer la suppression')) return;
+    profils.profils = profils.profils.filter(x => x.id !== p.id);
+    choisirProfil(parNom(profils.profils)[0].id);
+    sortie('pr-sortie', 'Profil « ' + p.nom + ' » supprimé de cette page'
+      + (appareil && appareil.profils.some(x => x.nom === p.nom) ? ' ; l\'appareil garde le sien.' : '.'), false);
+  }
+  $('pr-liste').addEventListener('change', e => choisirProfil(e.target.value));
+  $('pr-nom').addEventListener('change', renommerProfil);
+  $('pr-nouveau').addEventListener('click', nouveauProfil);
+  $('pr-supprimer').addEventListener('click', supprimerProfil);
+
+  // ----- transfert des profils vers la page de l'appareil -----
+  // La page publiée (https) ne peut ni écrire dans la liste de la page de l'appareil (autre origine) ni lui parler
+  // (http) : elle ouvre sa page avec les profils dans le fragment de l'adresse (#profils=…), que le navigateur
+  // n'envoie pas à l'appareil. Contenu : { v: 1, profils: [{ nom, etat }] } en JSON, compressé (deflate-raw) quand le
+  // navigateur le sait, puis en base64url, précédé de « z1. » (compressé) ou « j1. ». La page qui le reçoit le
+  // contrôle et demande avant d'ajouter ; un profil de même nom est remplacé.
+  const PAGE_APPAREIL = 'http://192.168.4.1/';
+  const TRANSFERT_MAX = 200000;  // caractères de l'adresse
+  const RECUS_MAX = 60;          // profils lus au plus
+  let recus = null;              // profils reçus, en attente de « Ajouter à cette page »
+  function base64url(o) {
+    let s = '';
+    for (let i = 0; i < o.length; i += 0x8000) s += String.fromCharCode.apply(null, o.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function depuisBase64url(t) {
+    const s = atob(t.replace(/-/g, '+').replace(/_/g, '/'));
+    const o = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i);
+    return o;
+  }
+  async function transformer(o, flux) {
+    return new Uint8Array(await new Response(new Blob([o]).stream().pipeThrough(flux)).arrayBuffer());
+  }
+  async function encoderProfils(liste) {
+    const json = new TextEncoder().encode(JSON.stringify({ v: 1, profils: liste.map(p => ({ nom: p.nom, etat: p.etat })) }));
+    try { return 'z1.' + base64url(await transformer(json, new CompressionStream('deflate-raw'))); }
+    catch (e) { return 'j1.' + base64url(json); } // navigateur sans compression
+  }
+  async function decoderProfils(t) {
+    const m = /^([zj])1\.([A-Za-z0-9_-]+)$/.exec(t);
+    if (!m) throw new Error('adresse incomplète ou d\'un autre format');
+    let o = depuisBase64url(m[2]);
+    if (m[1] === 'z') o = await transformer(o, new DecompressionStream('deflate-raw'));
+    return JSON.parse(new TextDecoder().decode(o));
+  }
+  function profilsRecus(liste) { // profils lisibles : nom valable, champs de la page, textes de longueur raisonnable
+    const r = [];
+    liste.slice(0, RECUS_MAX).forEach(x => {
+      if (!x || typeof x !== 'object' || !x.etat || typeof x.etat !== 'object' || typeof x.etat['p-poids'] !== 'string') return;
+      const nom = nomNettoye(x.nom), etat = etatProfil(x.etat);
+      if (!nom || octets(nom) > NOM_OCTETS_MAX) return;
+      if (Object.keys(etat).some(k => etat[k].length > (k === 'trainee-json' ? 65536 : 64))) return;
+      const i = r.findIndex(y => y.nom === nom);
+      if (i >= 0) r.splice(i, 1);
+      r.push({ nom: nom, etat: etat });
+    });
+    return r;
+  }
+  function afficherRecus(texte, choix) {
+    $('recus-texte').textContent = texte;
+    $('recus-ajouter').hidden = !choix;
+    $('recus-fermer').textContent = choix ? 'Ignorer' : 'OK';
+    $('recus').hidden = false;
+  }
+  async function recevoirProfils() {
+    const h = location.hash;
+    if (h.indexOf('#profils=') !== 0) return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* adresse gardée */ }
+    try {
+      const o = await decoderProfils(h.slice('#profils='.length));
+      if (!o || o.v !== 1 || !Array.isArray(o.profils)) throw new Error('contenu inattendu');
+      recus = profilsRecus(o.profils);
+      if (!recus.length) throw new Error('aucun profil lisible');
+    } catch (e) {
+      recus = null;
+      afficherRecus(phrase('Profils reçus illisibles : ' + texteErreur(e)), false);
+      return;
+    }
+    const n = recus.filter(r => profils.profils.some(p => p.nom === r.nom)).length;
+    afficherRecus(nombreProfils(recus.length) + ' de l\'autre page : ' + recus.map(r => '« ' + r.nom + ' »').join(', ') + '.'
+      + (n ? ' ' + n + ' de même nom ' + (n > 1 ? 'remplaceront ceux' : 'remplacera celui') + ' de cette page.' : ''), true);
+  }
+  function ajouterRecus() {
+    if (!recus) return;
+    let ajoutes = 0, remplaces = 0, courantRemplace = false;
+    recus.forEach(r => {
+      const p = profils.profils.find(x => x.nom === r.nom);
+      if (p) { p.etat = r.etat; remplaces++; courantRemplace = courantRemplace || p.id === profils.courant; }
+      else { profils.profils.push({ id: nouvelId(), nom: r.nom, etat: r.etat }); ajoutes++; }
+    });
+    recus = null;
+    garderProfils();
+    if (courantRemplace) choisirProfil(profils.courant); else profilsChanges();
+    afficherRecus([ajoutes ? nombreProfils(ajoutes) + (ajoutes > 1 ? ' ajoutés' : ' ajouté') : '',
+      remplaces ? nombreProfils(remplaces) + (remplaces > 1 ? ' remplacés' : ' remplacé') : ''].filter(Boolean).join(', ')
+      + ' dans cette page.' + (SERVIE_PAR_APPAREIL ? ' Pour les mettre dans l\'appareil : « Envoyer tous les profils », bloc Appareil WMLRF.' : ''), false);
+  }
+  $('recus-ajouter').addEventListener('click', ajouterRecus);
+  $('recus-fermer').addEventListener('click', () => { recus = null; $('recus').hidden = true; });
+  window.addEventListener('hashchange', recevoirProfils);
+  $('pr-transferer').addEventListener('click', async ev => {
+    ev.preventDefault();
+    sortie('pr-sortie-transfert', '', false);
+    try {
+      const adresse = PAGE_APPAREIL + '#profils=' + await encoderProfils(parNom(profils.profils));
+      if (adresse.length > TRANSFERT_MAX) {
+        throw new Error('adresse de ' + fmt(adresse.length, 0) + ' caractères, ' + fmt(TRANSFERT_MAX, 0) + ' au plus ; supprimer des profils');
+      }
+      location.assign(adresse);
+    } catch (e) { sortie('pr-sortie-transfert', phrase('Transfert impossible : ' + texteErreur(e)), true); }
+  });
+
   // ----- appareil WMLRF : profils, lieu et mise à jour par son Wi-Fi -----
   // Protocole v0 de firmware.md (« Interfaces fixées par ce domaine ») : page servie par l'appareil, à
   // http://192.168.4.1/, API sur la même origine. Enregistrement d'un profil : { nom, etat, profil } ; « profil » est
   // l'objet que la page passe au solveur (lireProfil), lu par l'appareil ; « etat », les champs du profil dans la
   // page, gardé tel quel par l'appareil, sert à reprendre le profil dans la page.
   const API = '/api/v0/';
-  const PROFIL_CHAMPS = IDS.filter(id => /^(v0-|v0p-|p-|z-|dsf-)/.test(id) || id === 'k-cdf' || id === 'trainee-json');
-  const PROFIL_RADIOS = ['unite', 'sens', 'modev0', 'zeroactif', 'trainee'];
-  const NOM_OCTETS_MAX = 23;   // nom gardé par l'appareil (firmware.md)
   // L'appareil sert sa page en HTTP (http://192.168.4.1/) : une page publiée en HTTPS ou ouverte depuis un fichier
   // interroge son propre serveur, jamais l'appareil ; elle propose d'ouvrir la page de l'appareil.
   const SERVIE_PAR_APPAREIL = location.protocol === 'http:';
@@ -3682,9 +4005,13 @@
     + 'Wi-Fi de l\'appareil, relier le téléphone à son réseau (nom et mot de passe à l\'écran), puis ouvrir sa page, http://192.168.4.1/.';
   let appareil = null;         // dernière réponse de GET /api/v0/appareil
   let confirmationEffacer = null;
-  const octets = s => new TextEncoder().encode(s).length;
   const pause = ms => new Promise(r => setTimeout(r, ms));
 
+  function erreurReseau(texte) { // appareil injoignable ou muet, à la différence d'un refus
+    const e = new Error(texte);
+    e.reseau = true;
+    return e;
+  }
   async function demander(methode, chemin, corps) {
     const arret = new AbortController();
     const minuterieArret = setTimeout(() => arret.abort(), DELAI_APPAREIL_MS);
@@ -3694,13 +4021,13 @@
         rep = await fetch(API + chemin, { method: methode, body: corps, cache: 'no-store', signal: arret.signal,
           headers: corps === undefined ? undefined : { 'Content-Type': 'application/json' } });
       } catch (e) {
-        throw new Error((arret.signal.aborted ? 'pas de réponse en ' + DELAI_APPAREIL_MS / 1000 + ' s'
+        throw erreurReseau((arret.signal.aborted ? 'pas de réponse en ' + DELAI_APPAREIL_MS / 1000 + ' s'
           : 'appareil injoignable') + '. ' + WIFI_A_VOIR);
       }
       if (rep.status === 204) return null;
       let json = null;
       try { json = await rep.json(); } catch (e) { json = null; }
-      if (arret.signal.aborted) throw new Error('réponse interrompue après ' + DELAI_APPAREIL_MS / 1000 + ' s. ' + WIFI_A_VOIR);
+      if (arret.signal.aborted) throw erreurReseau('réponse interrompue après ' + DELAI_APPAREIL_MS / 1000 + ' s. ' + WIFI_A_VOIR);
       if (!rep.ok) throw new Error((json && json.erreur ? json.erreur : 'refus') + ' (' + rep.status + ')');
       return json;
     } finally {
@@ -3710,8 +4037,9 @@
   function majBoutonsAppareil() {
     const relie = !!appareil, rang = Number($('ap-rang').value);
     const occupe = relie && appareil.profils.some(p => p.rang === rang);
-    ['ap-envoyer', 'ap-lieu', 'ap-maj'].forEach(id => { $(id).disabled = !relie; });
+    ['ap-envoyer', 'ap-envoyer-tous', 'ap-lieu', 'ap-maj'].forEach(id => { $(id).disabled = !relie; });
     ['ap-reprendre', 'ap-effacer'].forEach(id => { $(id).disabled = !occupe; });
+    majPageAppareil();
   }
   function remplirRangs(choix) {
     const sel = $('ap-rang'), noms = {};
@@ -3728,7 +4056,7 @@
   }
   function rangConseille() { // emplacement du profil de même nom, sinon le premier libre
     if (!appareil) return 0;
-    const nom = $('ap-nom').value.trim(), meme = appareil.profils.find(p => p.nom === nom);
+    const nom = profils ? profilCourant().nom : '', meme = appareil.profils.find(p => p.nom === nom);
     if (meme) return meme.rang;
     for (let r = 0; r < appareil.profilsMax; r++) if (!appareil.profils.some(p => p.rang === r)) return r;
     return 0;
@@ -3756,34 +4084,67 @@
     remplirRangs(rangChoisi !== undefined ? rangChoisi : rangConseille());
     majBoutonsAppareil();
   }
-  function enregistrementProfil() {
-    const nom = $('ap-nom').value.trim();
-    if (!nom) throw new ErreurChamp($('ap-nom'), 'nom requis');
-    if (octets(nom) > NOM_OCTETS_MAX) throw new ErreurChamp($('ap-nom'), NOM_OCTETS_MAX + ' octets au plus, une lettre accentuée en comptant 2');
+  // Essai que fait l'appareil avant de garder un profil : un calcul à 100 m (firmware, main/profils.c).
+  const ESSAI_100M = { distanceM: 100, siteDeg: 0, azimutDeg: 0, latitudeDeg: 45, tempC: 15, tempPoudreC: null,
+    pressionHPa: 1013, humiditePct: 50 };
+  function enregistrement(nom) { // profil présent dans la page → texte de l'enregistrement { nom, etat, profil }
     const profil = lireProfil();
-    // Essai que fait l'appareil avant de garder un profil : un calcul à 100 m (firmware, main/profils.c).
-    S().resoudre(profil, { distanceM: 100, siteDeg: 0, azimutDeg: 0, latitudeDeg: 45, tempC: 15, tempPoudreC: null,
-      pressionHPa: 1013, humiditePct: 50 });
-    const e = lireEtat(), etat = {};
-    PROFIL_CHAMPS.concat(PROFIL_RADIOS).forEach(k => { etat[k] = e[k]; });
-    const texte = JSON.stringify({ nom: nom, etat: etat, profil: profil });
+    S().resoudre(profil, ESSAI_100M);
+    const texte = JSON.stringify({ nom: nom, etat: etatProfil(lireEtat()), profil: profil });
     const max = appareil ? appareil.tailleMax : 16384;
     if (octets(texte) > max) throw new Error('profil de ' + fmt(octets(texte), 0) + ' octets, ' + fmt(max, 0) + ' au plus');
-    return { nom: nom, texte: texte };
+    return texte;
   }
   async function envoyerProfil() {
-    const rang = Number($('ap-rang').value);
-    $('ap-nom').removeAttribute('aria-invalid');
-    let r;
-    try { r = enregistrementProfil(); } catch (e) { sortie('ap-sortie-profil', message(e), true); return; }
+    const rang = Number($('ap-rang').value), nom = profilCourant().nom;
+    let texte;
+    try { texte = enregistrement(nom); } catch (e) { sortie('ap-sortie-profil', message(e), true); return; }
     sortie('ap-sortie-profil', 'Envoi…', false);
     try {
-      await demander('PUT', 'profils/' + rang, r.texte);
+      await demander('PUT', 'profils/' + rang, texte);
       await actualiserAppareil(rang);
-      sortie('ap-sortie-profil', 'Profil « ' + r.nom + ' » gardé par l\'appareil, emplacement ' + (rang + 1) + ' ('
-        + fmt(octets(r.texte), 0) + ' octets).', false);
+      sortie('ap-sortie-profil', 'Profil « ' + nom + ' » gardé par l\'appareil, emplacement ' + (rang + 1) + ' ('
+        + fmt(octets(texte), 0) + ' octets).', false);
     } catch (e) { sortie('ap-sortie-profil', 'Envoi refusé : ' + message(e), true); }
   }
+  // Tous les profils de la page : chacun à l'emplacement de même nom, sinon au premier libre. Les enregistrements sont
+  // faits d'abord, chaque profil écrit à son tour dans la page puis la page remise sur le sien, sans affichage entre-temps.
+  // Le profil affiché est pris tel qu'il est dans la page, comme pour « Envoyer ce profil ».
+  async function envoyerTous() {
+    if (!appareil) return;
+    const b = $('ap-envoyer-tous'), page = lireEtat(), prets = [], refus = [];
+    parNom(profils.profils).forEach(p => {
+      try {
+        ecrireEtat(p.id === profils.courant ? page : Object.assign({}, page, p.etat));
+        prets.push({ nom: p.nom, texte: enregistrement(p.nom) });
+      } catch (e) { refus.push('« ' + p.nom + ' » : ' + texteErreur(e)); }
+    });
+    ecrireEtat(page);
+    const places = new Map(appareil.profils.map(x => [x.nom, x.rang])), pris = new Set(appareil.profils.map(x => x.rang));
+    const max = appareil.profilsMax, gardes = [];
+    b.disabled = true;
+    for (let i = 0; i < prets.length; i++) {
+      const r = prets[i];
+      sortie('ap-sortie-profil', 'Envoi ' + (i + 1) + ' sur ' + prets.length + ' : « ' + r.nom + ' »…', false);
+      let rang = places.has(r.nom) ? places.get(r.nom) : -1;
+      for (let k = 0; rang < 0 && k < max; k++) if (!pris.has(k)) rang = k;
+      if (rang < 0) { refus.push('« ' + r.nom + ' » : plus d\'emplacement libre'); continue; }
+      pris.add(rang);
+      try {
+        await demander('PUT', 'profils/' + rang, r.texte);
+        gardes.push('« ' + r.nom + ' » en ' + (rang + 1));
+      } catch (e) {
+        refus.push('« ' + r.nom + ' » : ' + texteErreur(e));
+        if (e.reseau) { prets.slice(i + 1).forEach(x => refus.push('« ' + x.nom + ' » : non envoyé')); break; }
+      }
+    }
+    await actualiserAppareil();
+    sortie('ap-sortie-profil', (gardes.length ? nombreProfils(gardes.length) + (gardes.length > 1 ? ' gardés' : ' gardé')
+      + ' par l\'appareil : ' + gardes.join(', ') + '.' : 'Aucun profil envoyé.')
+      + (refus.length ? ' Non envoyés : ' + phrase(refus.join(' ; ')) : ''), refus.length > 0);
+  }
+  // Profil d'un emplacement : ajouté à la liste de la page, ou à la place du profil de même nom (après confirmation
+  // s'ils diffèrent), puis affiché.
   async function reprendreProfil() {
     const rang = Number($('ap-rang').value);
     try {
@@ -3792,12 +4153,20 @@
       if (!etat || typeof etat !== 'object' || typeof etat['p-poids'] !== 'string') {
         throw new Error('profil sans les champs de la page, envoyé autrement que par elle');
       }
-      const e = lireEtat();
-      PROFIL_CHAMPS.concat(PROFIL_RADIOS).forEach(k => { if (etat[k] !== undefined && etat[k] !== null) e[k] = String(etat[k]); });
-      ecrireEtat(e);
-      $('ap-nom').value = rec.nom || '';
-      calculer();
-      sortie('ap-sortie-profil', 'Profil « ' + rec.nom + ' » repris dans la page.', false);
+      let nom = nomNettoye(rec.nom);
+      if (!nom || octets(nom) > NOM_OCTETS_MAX) nom = nomLibre('Emplacement ' + (rang + 1));
+      const recu = etatProfil(etat);
+      let p = profils.profils.find(x => x.nom === nom);
+      const remplace = !!p && JSON.stringify(p.etat) !== JSON.stringify(recu);
+      if (remplace && !confirme($('ap-reprendre'), rang + '|' + nom, 'Confirmer le remplacement')) {
+        sortie('ap-sortie-profil', 'La page a déjà un profil « ' + nom + ' », différent : appuyer de nouveau pour le remplacer '
+          + 'par celui de l\'appareil.', false);
+        return;
+      }
+      const texte = !p ? ', ajouté au bloc Profils.' : (remplace ? ', à la place du sien.' : ', identique au sien.');
+      if (p) p.etat = recu; else { p = { id: nouvelId(), nom: nom, etat: recu }; profils.profils.push(p); }
+      choisirProfil(p.id);
+      sortie('ap-sortie-profil', 'Profil « ' + nom + ' » repris dans la page' + texte, false);
     } catch (e) { sortie('ap-sortie-profil', 'Reprise impossible : ' + message(e), true); }
   }
   async function effacerProfil() {
@@ -3861,8 +4230,107 @@
     sortie('ap-sortie-maj', 'Envoi : 0 %', false);
     x.send(f);
   }
+  // ----- page servie par l'appareil -----
+  // Application 0.11 et suivantes (firmware.md, « Interfaces fixées par ce domaine », 2026-11-18) : PUT /api/v0/page,
+  // page gzip ou HTML de 2 Mo moins 4 Ko au plus, gardée et servie à la place de celle du programme ; DELETE
+  // /api/v0/page ; GET /?page=programme ; « page » de /api/v0/appareil : { origine: "envoyee" | "programme", octets,
+  // gzip }. Sans ce champ, appareil d'avant 0.11 : pas d'envoi. La page choisie est contrôlée (page assemblée du
+  // calculateur, pas calculateur.html, qui a besoin de solveur.js), puis compressée par gzip si le navigateur le sait.
+  const PAGE_OCTETS_MAX = 0x200000 - 0x1000;
+  const PAGE_PROGRAMME_AFFICHEE = /(^|&)page=programme(&|$)/.test(location.search.slice(1));
+  const BALISE_SOURCE = '<script src="solveur.js"></scr' + 'ipt>';               // page source, sans solveur intégré
+  const MARQUE_ASSEMBLEE = '/* solveur.js, intégré par assembler' + '_site.py */'; // page assemblée
+  let pageChangee = false;   // page servie changée depuis l'ouverture de celle-ci
+  function majPageAppareil() {
+    const p = appareil && appareil.page, version = window.Solveur ? S().VERSION : '?';
+    let t = '—';
+    if (appareil && !p) t = 'Page du programme de l\'appareil ; envoi d\'une page : application 0.11 et suivantes.';
+    else if (p) {
+      t = 'Page servie : ' + (p.origine === 'envoyee' ? 'page envoyée' : 'page du programme') + ', ' + fmt(p.octets, 0)
+        + ' octets' + (p.gzip ? ' compressés' : '');
+      if (PAGE_PROGRAMME_AFFICHEE) t += ' ; page affichée : celle du programme, ' + version + '.';
+      else t += pageChangee ? '.' : ' ; c\'est celle-ci, ' + version + '.';
+    }
+    $('ap-page-etat').textContent = t;
+    $('ap-page-envoyer').disabled = !p;
+    $('ap-page-programme').disabled = !(p && p.origine === 'envoyee');
+  }
+  function erreurPage(html, nom) {
+    if (!/^﻿?\s*</.test(html)) return '« ' + nom + ' » n\'est pas une page HTML.';
+    if (html.indexOf(BALISE_SOURCE) >= 0) {
+      return '« ' + nom + ' » est la page source, qui a besoin de solveur.js : envoyer « index.html » du dossier site/.';
+    }
+    if (html.indexOf('<title>Balistique WMLRF</title>') < 0 || html.indexOf(MARQUE_ASSEMBLEE) < 0) {
+      return '« ' + nom + ' » n\'est pas la page assemblée du calculateur, « index.html » du dossier site/.';
+    }
+    return null;
+  }
+  function envoyerAvecSuivi(methode, chemin, corps, idSortie) { // avancement en pour cent dans idSortie
+    return new Promise((ok, echec) => {
+      const x = new XMLHttpRequest();
+      x.open(methode, API + chemin);
+      x.timeout = 120000;
+      x.setRequestHeader('Content-Type', 'application/octet-stream');
+      x.upload.onprogress = ev => {
+        if (ev.lengthComputable) sortie(idSortie, 'Envoi : ' + fmt(100 * ev.loaded / ev.total, 0) + ' %', false);
+      };
+      x.onload = () => {
+        let r = null;
+        try { r = x.responseText ? JSON.parse(x.responseText) : null; } catch (e) { r = null; }
+        if (x.status >= 200 && x.status < 300) ok(r);
+        else echec(new Error((r && r.erreur ? r.erreur : 'refus') + ' (' + x.status + ')'));
+      };
+      x.onerror = () => echec(erreurReseau('appareil injoignable pendant l\'envoi. ' + WIFI_A_VOIR));
+      x.ontimeout = () => echec(erreurReseau('pas de réponse en ' + x.timeout / 1000 + ' s. ' + WIFI_A_VOIR));
+      sortie(idSortie, 'Envoi : 0 %', false);
+      x.send(corps);
+    });
+  }
+  async function envoyerPage() {
+    const f = $('ap-page-fichier').files[0];
+    if (!f) { sortie('ap-sortie-page', 'Choisir la page à envoyer : « index.html » du dossier site/.', true); return; }
+    let corps = new Uint8Array(await f.arrayBuffer()), html;
+    const gzip = corps.length >= 2 && corps[0] === 0x1f && corps[1] === 0x8b;
+    try { html = new TextDecoder().decode(gzip ? await transformer(corps, new DecompressionStream('gzip')) : corps); }
+    catch (e) { sortie('ap-sortie-page', '« ' + f.name + ' » : fichier gzip illisible.', true); return; }
+    const err = erreurPage(html, f.name);
+    if (err) { sortie('ap-sortie-page', err, true); return; }
+    const m = /const VERSION = '([0-9.]+)'/.exec(html), version = m ? m[1] : '?';
+    let compresse = gzip;
+    if (!gzip) {
+      try { corps = await transformer(corps, new CompressionStream('gzip')); compresse = true; }
+      catch (e) { /* navigateur sans compression : page envoyée en HTML */ }
+    }
+    if (corps.length > PAGE_OCTETS_MAX) {
+      sortie('ap-sortie-page', 'Page de ' + fmt(corps.length, 0) + ' octets, ' + fmt(PAGE_OCTETS_MAX, 0) + ' au plus.', true);
+      return;
+    }
+    $('ap-page-envoyer').disabled = true;
+    try {
+      await envoyerAvecSuivi('PUT', 'page', corps, 'ap-sortie-page');
+      pageChangee = true;
+      await actualiserAppareil(Number($('ap-rang').value));
+      sortie('ap-sortie-page', 'Page ' + version + ' gardée par l\'appareil (' + fmt(corps.length, 0) + ' octets'
+        + (compresse ? ' compressés' : '') + ') et servie à la place de celle du programme.', false);
+      $('ap-page-ouvrir').hidden = false;
+    } catch (e) { sortie('ap-sortie-page', 'Envoi refusé : ' + message(e), true); majPageAppareil(); }
+  }
+  async function revenirPageProgramme() {
+    if (!confirme($('ap-page-programme'), 'page', 'Confirmer le retour')) return;
+    try {
+      await demander('DELETE', 'page');
+      pageChangee = true;
+      await actualiserAppareil(Number($('ap-rang').value));
+      sortie('ap-sortie-page', 'Page envoyée effacée : l\'appareil sert de nouveau celle de son programme.', false);
+      $('ap-page-ouvrir').hidden = false;
+    } catch (e) { sortie('ap-sortie-page', 'Retour refusé : ' + message(e), true); }
+  }
+  $('ap-page-envoyer').addEventListener('click', envoyerPage);
+  $('ap-page-programme').addEventListener('click', revenirPageProgramme);
+
   $('ap-actualiser').addEventListener('click', () => actualiserAppareil());
   $('ap-envoyer').addEventListener('click', envoyerProfil);
+  $('ap-envoyer-tous').addEventListener('click', envoyerTous);
   $('ap-reprendre').addEventListener('click', reprendreProfil);
   $('ap-effacer').addEventListener('click', effacerProfil);
   $('ap-lieu').addEventListener('click', envoyerLieu);
@@ -3942,6 +4410,19 @@
     }
   }
   ecrireEtat(sauve ? Object.assign({}, EXEMPLE, NEUTRE, sauve) : EXEMPLE);
+  // Profils : la liste gardée met dans la page le profil affiché en dernier. Sans liste (version 1.1.2 et avant), un
+  // premier profil est fait de l'état de la page, au nom donné à l'appareil s'il y en avait un ; au premier passage,
+  // c'est le profil d'exemple.
+  profils = chargerProfils();
+  if (profils) ecrireEtat(Object.assign(lireEtat(), profilCourant().etat));
+  else {
+    const ancien = sauve ? nomNettoye(sauve['ap-nom']) : '';
+    const p = { id: nouvelId(), etat: etatProfil(lireEtat()),
+      nom: !sauve ? NOM_EXEMPLE : (ancien && octets(ancien) <= NOM_OCTETS_MAX ? ancien : 'Profil 1') };
+    profils = { courant: p.id, profils: [p] };
+    garderProfils();
+  }
+  afficherProfils();
   calculer();
   majLatitudeAppareil();
   remplirRangs(0);
@@ -3951,7 +4432,9 @@
     sortie('ap-etat', HORS_APPAREIL, false);
     $('ap-actualiser').hidden = true;
     $('ap-page').hidden = false;
+    $('pr-bloc-transfert').hidden = false;
   }
+  recevoirProfils();
 })();
 </script>
 
