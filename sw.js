@@ -1,18 +1,18 @@
 /* Service worker du calculateur balistique, généré par assembler_site.py. Ne pas modifier à la main. */
-const VERSION = 'aaa599e7c51a';
+const VERSION = '9f6e17742575';
 const CACHE = 'calculateur-' + VERSION;
-const POLICES = 'calculateur-polices';
 const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icone-180.png', 'icone-192.png', 'icone-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
 });
 
+// Anciens caches effacés, dont « calculateur-polices » des polices Google (page 1.1.1 et avant).
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(cles => Promise.all(cles
-        .filter(k => k.startsWith('calculateur-') && k !== CACHE && k !== POLICES)
+        .filter(k => k.startsWith('calculateur-') && k !== CACHE)
         .map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
@@ -33,19 +33,6 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-
-  // Polices Google : mises en cache à la première visite en ligne, servies depuis le cache ensuite.
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(caches.open(POLICES).then(async c => {
-      const copie = await c.match(req);
-      if (copie) return copie;
-      const rep = await fetch(req);
-      if (rep.ok || rep.type === 'opaque') c.put(req, rep.clone());
-      return rep;
-    }));
-    return;
-  }
-
   if (url.origin !== self.location.origin) return;
 
   // Page : réseau d'abord (dernière version si en ligne), cache sinon.
