@@ -30,7 +30,7 @@
   // modification publiée ; nouvelle fonction : mineur ; correction ou texte : correctif ; profil enregistré ou données
   // échangées avec l'appareil devenus incompatibles : majeur. Ajouter la ligne correspondante à la liste des versions
   // de calculateur.html (avis de mise à jour).
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
 
   // ---------------------------------------------------------------------------
   // Constantes et sources

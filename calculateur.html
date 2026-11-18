@@ -192,6 +192,7 @@
     gap: 14px 14px;
   }
   .champ { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; align-content: start; min-width: 0; }
+  .champ-large { grid-column: 1 / -1; max-width: 360px; }   /* liste de noms : toute la largeur, sur petit écran */
   .champ > label, .champ > .etiquette {
     font-size: 13px;
     font-weight: 500;
@@ -619,7 +620,7 @@
 
 <div class="page">
   <header class="entete">
-    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.3.0</span></p>
+    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.4.0</span></p>
     <h1>Balistique WMLRF</h1>
     <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, décalage du zéro (Zero Height, Zero Offset), Sight Scale Factor, cible mobile, probabilité de toucher.</p>
   </header>
@@ -844,14 +845,6 @@
               </div>
               <p class="sortie-calcul sortie-ap" id="pr-sortie" role="status"></p>
               <span class="aide">Un profil réunit les blocs qui suivent : arme et munition, zérotage, décalage du zéro, Sight Scale Factor, CDF, DSF et table de traînée importée. Chaque modification y est gardée aussitôt. « Nouveau profil » part d'une copie du profil affiché.</span>
-            </div>
-            <div class="sous-bloc" id="pr-bloc-transfert" hidden>
-              <p class="sous-titre">Vers la page de l'appareil</p>
-              <div class="actions">
-                <a class="bouton" id="pr-transferer" href="http://192.168.4.1/">Transférer les profils</a>
-              </div>
-              <p class="sortie-calcul sortie-ap" id="pr-sortie-transfert" role="status"></p>
-              <span class="aide">La page de l'appareil a sa propre liste. Écran Wi-Fi de l'appareil ouvert et téléphone relié à son réseau, ce bouton ouvre sa page avec tous les profils de celle-ci ; elle propose de les ajouter, un profil de même nom étant remplacé.</span>
             </div>
             </div>
           </fieldset>
@@ -1124,29 +1117,26 @@
                 <a class="bouton" id="ap-page" href="http://192.168.4.1/" hidden>Ouvrir la page de l'appareil</a>
               </div>
             </div>
-            <div class="sous-bloc">
+            <div class="sous-bloc" id="ap-bloc-profils">
               <p class="sous-titre">Profils</p>
+              <div class="actions">
+                <button type="button" id="ap-envoyer">Envoyer le profil affiché</button>
+                <button type="button" id="ap-envoyer-tous">Envoyer tous les profils</button>
+              </div>
               <div class="champs">
-                <div class="champ">
-                  <span class="etiquette">Profil affiché</span>
-                  <span class="valeur-fixe" id="ap-profil">—</span>
-                  <span class="aide">celui du bloc Profils</span>
-                </div>
-                <div class="champ">
-                  <label for="ap-rang">Emplacement</label>
+                <div class="champ champ-large">
+                  <label for="ap-rang">Dans l'appareil</label>
                   <div class="saisie-unite"><select id="ap-rang"></select></div>
                 </div>
               </div>
               <div class="actions">
-                <button type="button" id="ap-envoyer">Envoyer ce profil</button>
-                <button type="button" id="ap-envoyer-tous">Envoyer tous les profils</button>
                 <button type="button" id="ap-reprendre">Reprendre dans la page</button>
                 <button type="button" id="ap-effacer">Effacer de l'appareil</button>
               </div>
               <p class="sortie-calcul sortie-ap" id="ap-sortie-profil" role="status"></p>
-              <span class="aide">« Envoyer ce profil » : le profil affiché, à l'emplacement choisi. « Envoyer tous les profils » : ceux du bloc Profils, chacun à l'emplacement de même nom, sinon au premier libre. L'appareil les garde et les propose au menu par leur nom. « Reprendre dans la page » ajoute le profil de l'emplacement au bloc Profils, ou remplace celui de même nom.</span>
+              <span class="aide">L'appareil range les profils par leur nom : un profil envoyé remplace celui de même nom, sinon il prend une place libre (30 en tout). « Reprendre dans la page » ajoute au bloc Profils le profil choisi dans l'appareil, ou remplace celui de même nom.</span>
             </div>
-            <div class="sous-bloc">
+            <div class="sous-bloc" id="ap-bloc-lieu">
               <p class="sous-titre">Lieu</p>
               <div class="champs">
                 <div class="champ">
@@ -1165,26 +1155,17 @@
               </div>
               <p class="sortie-calcul sortie-ap" id="ap-sortie-lieu" role="status"></p>
             </div>
-            <div class="sous-bloc">
-              <p class="sous-titre">Page de l'appareil</p>
-              <p class="sortie-calcul sortie-ap" id="ap-page-etat" role="status"></p>
+            <div class="sous-bloc" id="ap-bloc-maj">
+              <p class="sous-titre">Mise à jour</p>
+              <p class="sortie-calcul sortie-ap" id="ap-maj-etat" role="status"></p>
               <div class="actions">
-                <input type="file" id="ap-page-fichier" accept=".html,.htm,.gz,text/html,application/gzip">
-                <button type="button" id="ap-page-envoyer">Envoyer la page</button>
-                <button type="button" id="ap-page-programme">Revenir à la page du programme</button>
-                <a class="bouton" id="ap-page-ouvrir" href="/" hidden>Ouvrir la page servie</a>
-              </div>
-              <p class="sortie-calcul sortie-ap" id="ap-sortie-page" role="status"></p>
-              <span class="aide">Page à envoyer : « index.html » du dossier site/, ou sa version .gz ; pas calculateur.html, qui a besoin de solveur.js. Compressée avant l'envoi si besoin, elle remplace celle du programme de l'appareil, mises à jour comprises, jusqu'à « Revenir à la page du programme ». Celle du programme reste à http://192.168.4.1/?page=programme.</span>
-            </div>
-            <div class="sous-bloc">
-              <p class="sous-titre">Mise à jour de l'appareil</p>
-              <div class="actions">
-                <input type="file" id="ap-fichier" accept=".bin">
-                <button type="button" id="ap-maj">Envoyer la mise à jour</button>
+                <input type="file" id="ap-fichier" accept=".bin,.html,.htm,.gz">
+                <button type="button" id="ap-maj">Mettre à jour</button>
+                <button type="button" id="ap-page-programme" hidden>Revenir à la page du programme</button>
+                <a class="bouton" id="ap-page-ouvrir" href="/" hidden>Ouvrir la nouvelle page</a>
               </div>
               <p class="sortie-calcul sortie-ap" id="ap-sortie-maj" role="status"></p>
-              <span class="aide">Image « …_ota.bin » (application seule, pas l'image complète) ; l'appareil la vérifie, puis redémarre.</span>
+              <span class="aide">Fichier « …_ota.bin » : programme de l'appareil, qui redémarre ensuite. Fichier « index.html » du dossier site/, ou sa version .gz : page de l'appareil, gardée à la place de celle de son programme.</span>
             </div>
             </div>
           </fieldset>
@@ -1400,6 +1381,7 @@
       <div>
         <h3>Versions</h3>
         <ul id="versions">
+          <li data-version="1.4.0"><b>1.4.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » simplifié : hors de l'appareil, un seul bouton, « Ouvrir la page de l'appareil », qui emporte les profils, ajoutés et envoyés à l'appareil en un appui à l'arrivée ; profils envoyés par leur nom, sans choix d'emplacement ; une seule « Mise à jour », pour le programme comme pour la page.</li>
           <li data-version="1.3.0"><b>1.3.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : page de l'appareil servie (origine, taille), envoi d'une nouvelle page sans nouvelle version de son programme, retour à la page du programme.</li>
           <li data-version="1.2.0"><b>1.2.0</b> · 18 novembre 2026 : bloc « Profils » : plusieurs profils dans la page, choisis, renommés, copiés ou supprimés, chaque modification gardée aussitôt ; nom du profil en tête de la solution ; « Envoyer tous les profils » à l'appareil ; depuis la page publiée, « Transférer les profils » vers la page de l'appareil.</li>
           <li data-version="1.1.2"><b>1.1.2</b> · 18 novembre 2026 : polices IBM Plex intégrées à la page : mêmes polices sans internet, sur l'appareil comme hors ligne ; plus aucune ressource chargée d'un autre site.</li>
@@ -2675,7 +2657,7 @@
     $('pr-nom').value = p.nom;
     $('pr-nom').removeAttribute('aria-invalid');
     $('pr-supprimer').disabled = profils.profils.length < 2;
-    $('ap-profil').textContent = p.nom;
+    $('ap-envoyer').textContent = 'Envoyer « ' + p.nom + ' »';
     $('r-profil').textContent = p.nom;
   }
   function profilsChanges() { // liste ou profil affiché changés ; emplacement conseillé sur l'appareil recalculé
@@ -2794,6 +2776,7 @@
   function afficherRecus(texte, choix) {
     $('recus-texte').textContent = texte;
     $('recus-ajouter').hidden = !choix;
+    $('recus-ajouter').textContent = SERVIE_PAR_APPAREIL ? 'Ajouter et envoyer à l\'appareil' : 'Ajouter à cette page';
     $('recus-fermer').textContent = choix ? 'Ignorer' : 'OK';
     $('recus').hidden = false;
   }
@@ -2811,12 +2794,19 @@
       afficherRecus(phrase('Profils reçus illisibles : ' + texteErreur(e)), false);
       return;
     }
-    const n = recus.filter(r => profils.profils.some(p => p.nom === r.nom)).length;
-    afficherRecus(nombreProfils(recus.length) + ' de l\'autre page : ' + recus.map(r => '« ' + r.nom + ' »').join(', ') + '.'
-      + (n ? ' ' + n + ' de même nom ' + (n > 1 ? 'remplaceront ceux' : 'remplacera celui') + ' de cette page.' : ''), true);
+    const noms = nombreProfils(recus.length) + ' de l\'autre page : ' + recus.map(r => '« ' + r.nom + ' »').join(', ') + '.';
+    if (SERVIE_PAR_APPAREIL) {
+      afficherRecus(noms + (recus.length > 1 ? ' Ajoutés à cette page et envoyés à l\'appareil, ils y remplacent ceux de même nom.'
+        : ' Ajouté à cette page et envoyé à l\'appareil, il y remplace celui de même nom.'), true);
+    } else {
+      const n = recus.filter(r => profils.profils.some(p => p.nom === r.nom)).length;
+      afficherRecus(noms + (n ? ' ' + n + ' de même nom ' + (n > 1 ? 'remplaceront ceux' : 'remplacera celui') + ' de cette page.' : ''), true);
+    }
   }
-  function ajouterRecus() {
+  // Profils reçus ajoutés à la liste, un profil de même nom remplacé ; sur la page de l'appareil, envoyés aussitôt.
+  async function ajouterRecus() {
     if (!recus) return;
+    const noms = recus.map(r => r.nom);
     let ajoutes = 0, remplaces = 0, courantRemplace = false;
     recus.forEach(r => {
       const p = profils.profils.find(x => x.nom === r.nom);
@@ -2826,23 +2816,32 @@
     recus = null;
     garderProfils();
     if (courantRemplace) choisirProfil(profils.courant); else profilsChanges();
-    afficherRecus([ajoutes ? nombreProfils(ajoutes) + (ajoutes > 1 ? ' ajoutés' : ' ajouté') : '',
-      remplaces ? nombreProfils(remplaces) + (remplaces > 1 ? ' remplacés' : ' remplacé') : ''].filter(Boolean).join(', ')
-      + ' dans cette page.' + (SERVIE_PAR_APPAREIL ? ' Pour les mettre dans l\'appareil : « Envoyer tous les profils », bloc Appareil WMLRF.' : ''), false);
+    const dansPage = [ajoutes ? nombreProfils(ajoutes) + (ajoutes > 1 ? ' ajoutés' : ' ajouté') : '',
+      remplaces ? nombreProfils(remplaces) + (remplaces > 1 ? ' remplacés' : ' remplacé') : ''].filter(Boolean).join(', ') + ' dans cette page.';
+    if (!SERVIE_PAR_APPAREIL) { afficherRecus(dansPage, false); return; }
+    $('recus-ajouter').hidden = true;
+    $('recus-texte').textContent = dansPage + ' Envoi à l\'appareil…';
+    if (!appareil) await actualiserAppareil();
+    if (!appareil) {
+      afficherRecus(dansPage + ' Appareil injoignable : « Envoyer tous les profils » quand il répondra.', false);
+      return;
+    }
+    const r = await envoyerProfils(parNom(profils.profils.filter(p => noms.indexOf(p.nom) >= 0)));
+    afficherRecus(dansPage + ' ' + r, false);
   }
   $('recus-ajouter').addEventListener('click', ajouterRecus);
   $('recus-fermer').addEventListener('click', () => { recus = null; $('recus').hidden = true; });
   window.addEventListener('hashchange', recevoirProfils);
-  $('pr-transferer').addEventListener('click', async ev => {
+  // Hors de l'appareil, « Ouvrir la page de l'appareil » emporte les profils de cette page.
+  $('ap-page').addEventListener('click', async ev => {
     ev.preventDefault();
-    sortie('pr-sortie-transfert', '', false);
     try {
       const adresse = PAGE_APPAREIL + '#profils=' + await encoderProfils(parNom(profils.profils));
       if (adresse.length > TRANSFERT_MAX) {
-        throw new Error('adresse de ' + fmt(adresse.length, 0) + ' caractères, ' + fmt(TRANSFERT_MAX, 0) + ' au plus ; supprimer des profils');
+        throw new Error('profils trop nombreux pour l\'adresse (' + fmt(adresse.length, 0) + ' caractères, ' + fmt(TRANSFERT_MAX, 0) + ' au plus)');
       }
       location.assign(adresse);
-    } catch (e) { sortie('pr-sortie-transfert', phrase('Transfert impossible : ' + texteErreur(e)), true); }
+    } catch (e) { sortie('ap-etat', phrase('Ouverture impossible : ' + texteErreur(e)), true); }
   });
 
   // ----- appareil WMLRF : profils, lieu et mise à jour par son Wi-Fi -----
@@ -2857,8 +2856,9 @@
   const DELAI_APPAREIL_MS = 8000;   // sans réponse dans ce délai, la demande est abandonnée
   const LECTURE_MIN_MS = 400;       // « Lecture de l'appareil… » reste visible au moins ce temps
   const WIFI_A_VOIR = 'Écran Wi-Fi de l\'appareil ouvert et téléphone relié à son réseau ?';
-  const HORS_APPAREIL = 'Non relié : cette page ne vient pas de l\'appareil, qui n\'échange qu\'avec la sienne. Ouvrir l\'écran '
-    + 'Wi-Fi de l\'appareil, relier le téléphone à son réseau (nom et mot de passe à l\'écran), puis ouvrir sa page, http://192.168.4.1/.';
+  const HORS_APPAREIL = 'Non relié : cette page ne vient pas de l\'appareil. Ouvrir l\'écran Wi-Fi de l\'appareil et relier le '
+    + 'téléphone à son réseau (nom et mot de passe à l\'écran), puis « Ouvrir la page de l\'appareil » : les profils de cette page '
+    + 'y sont emportés, prêts à être envoyés.';
   let appareil = null;         // dernière réponse de GET /api/v0/appareil
   let confirmationEffacer = null;
   const pause = ms => new Promise(r => setTimeout(r, ms));
@@ -2891,31 +2891,39 @@
     }
   }
   function majBoutonsAppareil() {
-    const relie = !!appareil, rang = Number($('ap-rang').value);
-    const occupe = relie && appareil.profils.some(p => p.rang === rang);
+    const relie = !!appareil, occupe = relie && $('ap-rang').value !== '';
     ['ap-envoyer', 'ap-envoyer-tous', 'ap-lieu', 'ap-maj'].forEach(id => { $(id).disabled = !relie; });
     ['ap-reprendre', 'ap-effacer'].forEach(id => { $(id).disabled = !occupe; });
     majPageAppareil();
   }
+  // Liste « Dans l'appareil » : ses profils seulement, par leur nom ; la place (rang) reste en valeur.
   function remplirRangs(choix) {
-    const sel = $('ap-rang'), noms = {};
-    (appareil ? appareil.profils : []).forEach(p => { noms[p.rang] = p.nom; });
-    const max = appareil ? appareil.profilsMax : 30;
+    const sel = $('ap-rang'), liste = appareil ? appareil.profils.slice().sort((a, b) => a.rang - b.rang) : [];
     sel.innerHTML = '';
-    for (let r = 0; r < max; r++) {
+    liste.forEach(p => {
       const o = document.createElement('option');
-      o.value = String(r);
-      o.textContent = (r + 1) + ' · ' + (noms[r] !== undefined ? noms[r] : 'libre');
+      o.value = String(p.rang);
+      o.textContent = p.nom;
+      sel.appendChild(o);
+    });
+    if (!liste.length) {
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = appareil ? 'aucun profil' : '—';
       sel.appendChild(o);
     }
-    sel.value = String(choix);
+    sel.value = liste.some(p => p.rang === choix) ? String(choix) : sel.options[0].value;
   }
-  function rangConseille() { // emplacement du profil de même nom, sinon le premier libre
-    if (!appareil) return 0;
+  function rangConseille() { // profil de l'appareil de même nom que le profil affiché, sinon le premier
+    if (!appareil || !appareil.profils.length) return -1;
     const nom = profils ? profilCourant().nom : '', meme = appareil.profils.find(p => p.nom === nom);
+    return meme ? meme.rang : Math.min.apply(null, appareil.profils.map(p => p.rang));
+  }
+  function rangPour(nom, pris) { // place du profil de même nom, sinon la première libre ; -1 : appareil plein
+    const meme = appareil.profils.find(p => p.nom === nom);
     if (meme) return meme.rang;
-    for (let r = 0; r < appareil.profilsMax; r++) if (!appareil.profils.some(p => p.rang === r)) return r;
-    return 0;
+    for (let r = 0; r < appareil.profilsMax; r++) if (!pris.has(r)) return r;
+    return -1;
   }
   async function actualiserAppareil(rangChoisi) {
     const b = $('ap-actualiser'), debut = Date.now();
@@ -2951,57 +2959,51 @@
     if (octets(texte) > max) throw new Error('profil de ' + fmt(octets(texte), 0) + ' octets, ' + fmt(max, 0) + ' au plus');
     return texte;
   }
-  async function envoyerProfil() {
-    const rang = Number($('ap-rang').value), nom = profilCourant().nom;
-    let texte;
-    try { texte = enregistrement(nom); } catch (e) { sortie('ap-sortie-profil', message(e), true); return; }
-    sortie('ap-sortie-profil', 'Envoi…', false);
-    try {
-      await demander('PUT', 'profils/' + rang, texte);
-      await actualiserAppareil(rang);
-      sortie('ap-sortie-profil', 'Profil « ' + nom + ' » gardé par l\'appareil, emplacement ' + (rang + 1) + ' ('
-        + fmt(octets(texte), 0) + ' octets).', false);
-    } catch (e) { sortie('ap-sortie-profil', 'Envoi refusé : ' + message(e), true); }
-  }
-  // Tous les profils de la page : chacun à l'emplacement de même nom, sinon au premier libre. Les enregistrements sont
-  // faits d'abord, chaque profil écrit à son tour dans la page puis la page remise sur le sien, sans affichage entre-temps.
-  // Le profil affiché est pris tel qu'il est dans la page, comme pour « Envoyer ce profil ».
-  async function envoyerTous() {
-    if (!appareil) return;
-    const b = $('ap-envoyer-tous'), page = lireEtat(), prets = [], refus = [];
-    parNom(profils.profils).forEach(p => {
+  // Profils de la liste vers l'appareil, chacun à la place de même nom, sinon à la première libre. Les enregistrements
+  // sont faits d'abord, chaque profil écrit à son tour dans la page puis la page remise sur le sien, sans affichage
+  // entre-temps ; le profil affiché est pris tel qu'il est dans la page. Arrêt à la première coupure de liaison.
+  // Rend le bilan, écrit aussi sous les boutons.
+  async function envoyerProfils(liste) {
+    const page = lireEtat(), prets = [], refus = [], gardes = [];
+    liste.forEach(p => {
       try {
         ecrireEtat(p.id === profils.courant ? page : Object.assign({}, page, p.etat));
         prets.push({ nom: p.nom, texte: enregistrement(p.nom) });
       } catch (e) { refus.push('« ' + p.nom + ' » : ' + texteErreur(e)); }
     });
     ecrireEtat(page);
-    const places = new Map(appareil.profils.map(x => [x.nom, x.rang])), pris = new Set(appareil.profils.map(x => x.rang));
-    const max = appareil.profilsMax, gardes = [];
-    b.disabled = true;
+    const pris = new Set(appareil.profils.map(x => x.rang));
+    ['ap-envoyer', 'ap-envoyer-tous'].forEach(id => { $(id).disabled = true; });
     for (let i = 0; i < prets.length; i++) {
-      const r = prets[i];
+      const r = prets[i], rang = rangPour(r.nom, pris);
       sortie('ap-sortie-profil', 'Envoi ' + (i + 1) + ' sur ' + prets.length + ' : « ' + r.nom + ' »…', false);
-      let rang = places.has(r.nom) ? places.get(r.nom) : -1;
-      for (let k = 0; rang < 0 && k < max; k++) if (!pris.has(k)) rang = k;
-      if (rang < 0) { refus.push('« ' + r.nom + ' » : plus d\'emplacement libre'); continue; }
+      if (rang < 0) { refus.push('« ' + r.nom + ' » : appareil plein, ' + appareil.profilsMax + ' profils'); continue; }
       pris.add(rang);
       try {
         await demander('PUT', 'profils/' + rang, r.texte);
-        gardes.push('« ' + r.nom + ' » en ' + (rang + 1));
+        gardes.push('« ' + r.nom + ' »');
       } catch (e) {
         refus.push('« ' + r.nom + ' » : ' + texteErreur(e));
         if (e.reseau) { prets.slice(i + 1).forEach(x => refus.push('« ' + x.nom + ' » : non envoyé')); break; }
       }
     }
-    await actualiserAppareil();
-    sortie('ap-sortie-profil', (gardes.length ? nombreProfils(gardes.length) + (gardes.length > 1 ? ' gardés' : ' gardé')
-      + ' par l\'appareil : ' + gardes.join(', ') + '.' : 'Aucun profil envoyé.')
-      + (refus.length ? ' Non envoyés : ' + phrase(refus.join(' ; ')) : ''), refus.length > 0);
+    await actualiserAppareil();   // liste « Dans l'appareil » sur le profil affiché, s'il y est
+    const bilan = (gardes.length ? (gardes.length > 1 ? nombreProfils(gardes.length) + ' gardés' : 'Profil ' + gardes[0] + ' gardé')
+      + ' par l\'appareil' + (gardes.length > 1 ? ' : ' + gardes.join(', ') : '') + '.' : 'Aucun profil envoyé.')
+      + (refus.length ? ' Non envoyés : ' + phrase(refus.join(' ; ')) : '');
+    sortie('ap-sortie-profil', bilan, refus.length > 0);
+    return bilan;
+  }
+  async function envoyerProfil() {
+    if (appareil) await envoyerProfils([profilCourant()]);
+  }
+  async function envoyerTous() {
+    if (appareil) await envoyerProfils(parNom(profils.profils));
   }
   // Profil d'un emplacement : ajouté à la liste de la page, ou à la place du profil de même nom (après confirmation
   // s'ils diffèrent), puis affiché.
   async function reprendreProfil() {
+    if ($('ap-rang').value === '') return;
     const rang = Number($('ap-rang').value);
     try {
       const rec = await demander('GET', 'profils/' + rang);
@@ -3026,7 +3028,9 @@
     } catch (e) { sortie('ap-sortie-profil', 'Reprise impossible : ' + message(e), true); }
   }
   async function effacerProfil() {
+    if ($('ap-rang').value === '') return;
     const b = $('ap-effacer'), rang = Number($('ap-rang').value);
+    const nom = appareil && appareil.profils.some(p => p.rang === rang) ? appareil.profils.find(p => p.rang === rang).nom : '';
     const retablir = () => { confirmationEffacer = null; b.textContent = 'Effacer de l\'appareil'; };
     if (!confirmationEffacer || confirmationEffacer.rang !== rang) { // premier appui : confirmation demandée
       if (confirmationEffacer) clearTimeout(confirmationEffacer.minuterie);
@@ -3038,8 +3042,8 @@
     retablir();
     try {
       await demander('DELETE', 'profils/' + rang);
-      await actualiserAppareil(rang);
-      sortie('ap-sortie-profil', 'Emplacement ' + (rang + 1) + ' effacé.', false);
+      await actualiserAppareil();
+      sortie('ap-sortie-profil', 'Profil « ' + nom + ' » effacé de l\'appareil.', false);
     } catch (e) { sortie('ap-sortie-profil', 'Effacement refusé : ' + message(e), true); }
   }
   function majLatitudeAppareil() {
@@ -3061,9 +3065,16 @@
       sortie('ap-sortie-lieu', 'Lieu gardé par l\'appareil : latitude ' + fmt(lat, 2) + '°, déclinaison ' + fmt(dec, 1) + '°.', false);
     } catch (e) { sortie('ap-sortie-lieu', 'Envoi refusé : ' + message(e), true); }
   }
-  function envoyerMiseAJour() {
+  // Mise à jour : un seul fichier ; « …_ota.bin », programme de l'appareil ; page HTML ou gzip, page de l'appareil.
+  function mettreAJour() {
     const f = $('ap-fichier').files[0];
-    if (!f) { sortie('ap-sortie-maj', 'Choisir l\'image de mise à jour, « …_ota.bin ».', true); return; }
+    if (!f) {
+      sortie('ap-sortie-maj', 'Choisir le fichier : « …_ota.bin » pour le programme, « index.html » du dossier site/ pour la page.', true);
+      return;
+    }
+    if (/\.bin$/i.test(f.name)) envoyerMiseAJour(f); else envoyerPage(f);
+  }
+  function envoyerMiseAJour(f) {
     if (!/_ota\.bin$/i.test(f.name)) {
       sortie('ap-sortie-maj', '« ' + f.name + ' » : choisir l\'image « …_ota.bin » (application seule), pas l\'image complète.', true);
       return;
@@ -3097,19 +3108,21 @@
   const BALISE_SOURCE = '<script src="solveur.js"></scr' + 'ipt>';               // page source, sans solveur intégré
   const MARQUE_ASSEMBLEE = '/* solveur.js, intégré par assembler' + '_site.py */'; // page assemblée
   let pageChangee = false;   // page servie changée depuis l'ouverture de celle-ci
-  function majPageAppareil() {
+  function majPageAppareil() { // programme et page servie (origine, taille ; version quand c'est la page affichée)
     const p = appareil && appareil.page, version = window.Solveur ? S().VERSION : '?';
-    let t = '—';
-    if (appareil && !p) t = 'Page du programme de l\'appareil ; envoi d\'une page : application 0.11 et suivantes.';
-    else if (p) {
-      t = 'Page servie : ' + (p.origine === 'envoyee' ? 'page envoyée' : 'page du programme') + ', ' + fmt(p.octets, 0)
-        + ' octets' + (p.gzip ? ' compressés' : '');
-      if (PAGE_PROGRAMME_AFFICHEE) t += ' ; page affichée : celle du programme, ' + version + '.';
-      else t += pageChangee ? '.' : ' ; c\'est celle-ci, ' + version + '.';
+    let t = '';
+    if (appareil) {
+      t = 'Programme : ' + appareil.version + '. Page : ';
+      if (!p) t += 'celle du programme ; envoi d\'une page à partir de l\'application 0.11.';
+      else {
+        t += (p.origine === 'envoyee' ? 'envoyée' : 'celle du programme');
+        if (!PAGE_PROGRAMME_AFFICHEE && !pageChangee) t += ', version ' + version;
+        t += ' (' + fmt(Math.round(p.octets / 1000), 0) + ' ko)';
+        t += PAGE_PROGRAMME_AFFICHEE ? ' ; page affichée : celle du programme, version ' + version + '.' : '.';
+      }
     }
-    $('ap-page-etat').textContent = t;
-    $('ap-page-envoyer').disabled = !p;
-    $('ap-page-programme').disabled = !(p && p.origine === 'envoyee');
+    $('ap-maj-etat').textContent = t;
+    $('ap-page-programme').hidden = !(p && p.origine === 'envoyee');
   }
   function erreurPage(html, nom) {
     if (!/^﻿?\s*</.test(html)) return '« ' + nom + ' » n\'est pas une page HTML.';
@@ -3142,15 +3155,18 @@
       x.send(corps);
     });
   }
-  async function envoyerPage() {
-    const f = $('ap-page-fichier').files[0];
-    if (!f) { sortie('ap-sortie-page', 'Choisir la page à envoyer : « index.html » du dossier site/.', true); return; }
+  async function envoyerPage(f) {
+    if (appareil && !appareil.page) {
+      sortie('ap-sortie-maj', 'L\'appareil (' + appareil.version + ') n\'accepte pas de page : mettre d\'abord son programme à jour, '
+        + 'application 0.11 ou suivante.', true);
+      return;
+    }
     let corps = new Uint8Array(await f.arrayBuffer()), html;
     const gzip = corps.length >= 2 && corps[0] === 0x1f && corps[1] === 0x8b;
     try { html = new TextDecoder().decode(gzip ? await transformer(corps, new DecompressionStream('gzip')) : corps); }
-    catch (e) { sortie('ap-sortie-page', '« ' + f.name + ' » : fichier gzip illisible.', true); return; }
+    catch (e) { sortie('ap-sortie-maj', '« ' + f.name + ' » : fichier gzip illisible.', true); return; }
     const err = erreurPage(html, f.name);
-    if (err) { sortie('ap-sortie-page', err, true); return; }
+    if (err) { sortie('ap-sortie-maj', err, true); return; }
     const m = /const VERSION = '([0-9.]+)'/.exec(html), version = m ? m[1] : '?';
     let compresse = gzip;
     if (!gzip) {
@@ -3158,18 +3174,18 @@
       catch (e) { /* navigateur sans compression : page envoyée en HTML */ }
     }
     if (corps.length > PAGE_OCTETS_MAX) {
-      sortie('ap-sortie-page', 'Page de ' + fmt(corps.length, 0) + ' octets, ' + fmt(PAGE_OCTETS_MAX, 0) + ' au plus.', true);
+      sortie('ap-sortie-maj', 'Page de ' + fmt(corps.length, 0) + ' octets, ' + fmt(PAGE_OCTETS_MAX, 0) + ' au plus.', true);
       return;
     }
-    $('ap-page-envoyer').disabled = true;
+    $('ap-maj').disabled = true;
     try {
-      await envoyerAvecSuivi('PUT', 'page', corps, 'ap-sortie-page');
+      await envoyerAvecSuivi('PUT', 'page', corps, 'ap-sortie-maj');
       pageChangee = true;
       await actualiserAppareil(Number($('ap-rang').value));
-      sortie('ap-sortie-page', 'Page ' + version + ' gardée par l\'appareil (' + fmt(corps.length, 0) + ' octets'
-        + (compresse ? ' compressés' : '') + ') et servie à la place de celle du programme.', false);
+      sortie('ap-sortie-maj', 'Page ' + version + ' gardée par l\'appareil (' + fmt(Math.round(corps.length / 1000), 0) + ' ko'
+        + (compresse ? ', compressée' : '') + '), servie à la place de celle du programme. « Ouvrir la nouvelle page » pour l\'utiliser.', false);
       $('ap-page-ouvrir').hidden = false;
-    } catch (e) { sortie('ap-sortie-page', 'Envoi refusé : ' + message(e), true); majPageAppareil(); }
+    } catch (e) { sortie('ap-sortie-maj', 'Envoi refusé : ' + message(e), true); majBoutonsAppareil(); }
   }
   async function revenirPageProgramme() {
     if (!confirme($('ap-page-programme'), 'page', 'Confirmer le retour')) return;
@@ -3177,11 +3193,10 @@
       await demander('DELETE', 'page');
       pageChangee = true;
       await actualiserAppareil(Number($('ap-rang').value));
-      sortie('ap-sortie-page', 'Page envoyée effacée : l\'appareil sert de nouveau celle de son programme.', false);
+      sortie('ap-sortie-maj', 'Page envoyée effacée : l\'appareil sert de nouveau celle de son programme.', false);
       $('ap-page-ouvrir').hidden = false;
-    } catch (e) { sortie('ap-sortie-page', 'Retour refusé : ' + message(e), true); }
+    } catch (e) { sortie('ap-sortie-maj', 'Retour refusé : ' + message(e), true); }
   }
-  $('ap-page-envoyer').addEventListener('click', envoyerPage);
   $('ap-page-programme').addEventListener('click', revenirPageProgramme);
 
   $('ap-actualiser').addEventListener('click', () => actualiserAppareil());
@@ -3190,7 +3205,7 @@
   $('ap-reprendre').addEventListener('click', reprendreProfil);
   $('ap-effacer').addEventListener('click', effacerProfil);
   $('ap-lieu').addEventListener('click', envoyerLieu);
-  $('ap-maj').addEventListener('click', envoyerMiseAJour);
+  $('ap-maj').addEventListener('click', mettreAJour);
   $('ap-rang').addEventListener('change', majBoutonsAppareil);
   $('t-latitude').addEventListener('input', majLatitudeAppareil);
 
@@ -3284,11 +3299,11 @@
   remplirRangs(0);
   majBoutonsAppareil();
   if (SERVIE_PAR_APPAREIL) actualiserAppareil();
-  else {
+  else { // hors de l'appareil : une explication et un bouton, rien d'autre
     sortie('ap-etat', HORS_APPAREIL, false);
     $('ap-actualiser').hidden = true;
     $('ap-page').hidden = false;
-    $('pr-bloc-transfert').hidden = false;
+    ['ap-bloc-profils', 'ap-bloc-lieu', 'ap-bloc-maj'].forEach(id => { $(id).hidden = true; });
   }
   recevoirProfils();
 })();
