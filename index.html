@@ -209,6 +209,21 @@
     outline: none;
   }
   .saisie-unite input::placeholder { color: var(--sourdine); opacity: .8; }
+  .saisie-unite select {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--encre);
+    font: 500 16px/1.2 var(--police);
+    padding: 9px 10px;
+    outline: none;
+  }
+  .valeur-fixe { font: 500 16px/1.2 var(--police); font-variant-numeric: tabular-nums; padding: 10px 0 9px; }
+  input[type="file"] { max-width: 100%; font: 400 14px/1.3 var(--police); color: var(--encre); }
+  .sortie-ap { margin: 0; }
+  .sortie-ap:empty { display: none; }
   .unite {
     padding-inline: 4px 10px;
     font: 400 13px/1 var(--police-mono);
@@ -580,7 +595,7 @@
   </p>
 </noscript>
   <header class="entete">
-    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.0.0</span></p>
+    <p class="surtitre">WMLRF · application balistique · <span id="version">version 1.1.0</span></p>
     <h1>Balistique WMLRF</h1>
     <p class="chapeau">Correction d'élévation et de dérive, en mrad, pour la distance oblique lue au télémètre. Pris en compte : V0 selon la température (table ou pente), atmosphère, angle de site, dévers, vent 1, vent 2 et vent à distance, saut aérodynamique, Coriolis, dérive gyroscopique, traînée G7 ou importée, calibrations V0, CDF et DSF, décalage du zéro (Zero Height, Zero Offset), Sight Scale Factor, cible mobile, probabilité de toucher.</p>
   </header>
@@ -1034,6 +1049,67 @@
             </div>
           </fieldset>
 
+          <fieldset>
+            <legend><button type="button" class="pli" aria-expanded="true" aria-controls="pli-appareil"><svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span class="titre-bloc">Appareil WMLRF</span></button><span class="note-bloc">par le Wi-Fi de l'appareil</span></legend>
+            <div class="corps-pli" id="pli-appareil">
+            <div class="sous-bloc">
+              <div class="actions">
+                <p class="sortie-calcul sortie-ap" id="ap-etat" role="status">—</p>
+                <button type="button" id="ap-actualiser">Actualiser</button>
+              </div>
+            </div>
+            <div class="sous-bloc">
+              <p class="sous-titre">Profils</p>
+              <div class="champs">
+                <div class="champ">
+                  <label for="ap-nom">Nom du profil</label>
+                  <div class="saisie-unite"><input id="ap-nom" maxlength="23" autocomplete="off" spellcheck="false"></div>
+                  <span class="aide">16 caractères environ à l'écran de l'appareil</span>
+                </div>
+                <div class="champ">
+                  <label for="ap-rang">Emplacement</label>
+                  <div class="saisie-unite"><select id="ap-rang"></select></div>
+                </div>
+              </div>
+              <div class="actions">
+                <button type="button" id="ap-envoyer">Envoyer ce profil</button>
+                <button type="button" id="ap-reprendre">Reprendre dans la page</button>
+                <button type="button" id="ap-effacer">Effacer de l'appareil</button>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="ap-sortie-profil" role="status"></p>
+              <span class="aide">Le profil envoyé est celui de la page : arme et munition, conditions du zérotage, décalage du zéro, Sight Scale Factor, CDF, DSF et table de traînée importée. L'appareil le garde et le propose au menu par son nom.</span>
+            </div>
+            <div class="sous-bloc">
+              <p class="sous-titre">Lieu</p>
+              <div class="champs">
+                <div class="champ">
+                  <span class="etiquette">Latitude</span>
+                  <span class="valeur-fixe" id="ap-lat">—</span>
+                  <span class="aide">celle du bloc Tir</span>
+                </div>
+                <div class="champ">
+                  <label for="ap-dec">Déclinaison</label>
+                  <div class="saisie-unite"><input id="ap-dec" inputmode="decimal"><span class="unite">°</span></div>
+                  <span class="aide">magnétique : + à l'est, − à l'ouest</span>
+                </div>
+              </div>
+              <div class="actions">
+                <button type="button" id="ap-lieu">Envoyer le lieu</button>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="ap-sortie-lieu" role="status"></p>
+            </div>
+            <div class="sous-bloc">
+              <p class="sous-titre">Mise à jour de l'appareil</p>
+              <div class="actions">
+                <input type="file" id="ap-fichier" accept=".bin">
+                <button type="button" id="ap-maj">Envoyer la mise à jour</button>
+              </div>
+              <p class="sortie-calcul sortie-ap" id="ap-sortie-maj" role="status"></p>
+              <span class="aide">Image « …_ota.bin » (application seule, pas l'image complète) ; l'appareil la vérifie, puis redémarre.</span>
+            </div>
+            </div>
+          </fieldset>
+
           <div class="actions">
             <button type="button" id="b-exemple">Remettre le profil d'exemple</button>
             <span class="aide" id="etat-sauvegarde">Les valeurs saisies restent dans ce navigateur.</span>
@@ -1245,6 +1321,7 @@
       <div>
         <h3>Versions</h3>
         <ul id="versions">
+          <li data-version="1.1.0"><b>1.1.0</b> · 18 novembre 2026 : bloc « Appareil WMLRF » : profils envoyés à l'appareil par son Wi-Fi, repris dans la page ou effacés ; latitude et déclinaison envoyées ; mise à jour de l'appareil.</li>
           <li data-version="1.0.0"><b>1.0.0</b> · 19 octobre 2026 : Zero Height et Zero Offset ; Sight Scale Factor ; « élévation réelle » dans les calibrations ; bouton « Effacer le CDF » ; blocs repliables ; numéro de version et avis de mise à jour.</li>
           <li><b>0.4</b> · 23 septembre au 6 octobre 2026 : vent à distance ; traînée importée d'une range card CDM ; probabilité de toucher (WEZ) ; export de la range card ; précision de télémétrie par tranches ; correction du dévers dans le repère de la lunette, jusqu'à 90°.</li>
           <li><b>0.3</b> · 23 septembre 2026 : conditions du zérotage ; zéro latéral ; dévers ; calibration V0 ; CDF par la chute ou par la vitesse.</li>
@@ -1263,6 +1340,7 @@
           <li>Zéro vertical : calculé à plat dans les conditions du zérotage, avec la V0 de sa température, sans vent ni Coriolis ; si ces conditions ne sont pas prises en compte, dans les conditions du tir.</li>
           <li>Zéro latéral : la dérive gyroscopique et le Coriolis horizontal à la distance de zéro, rattrapés au zérotage, sont retranchés de la dérive (dérive nulle à la distance de zéro, comme AB Quantum).</li>
           <li>Zero Height, Zero Offset : écart du point d'impact au point visé à la distance de zéro (+ au-dessus ; + à droite, − à gauche), quand une autre munition, un silencieux ou une optique de nuit déplace le zéro ; le zéro est calculé pour passer par ce point.</li>
+          <li>Appareil WMLRF : page ouverte depuis l'appareil (menu Wi-Fi, http://192.168.4.1/), protocole v0 du firmware. Le profil envoyé est l'objet du calcul de la page, accompagné des champs de la page pour pouvoir l'y reprendre ; nom de 23 octets au plus ; latitude du bloc Tir et déclinaison magnétique (+ à l'est) ; mise à jour par l'image « …_ota.bin ».</li>
           <li>Sight Scale Factor : déplacement réel ÷ déplacement affiché à la tourelle (tall target test). Les réglages affichés sont les corrections divisées par le SSF de leur axe : solution, vent 2, cible mobile, dévers, table, export, speed drop. Quick wind et wind dot (réticule) et WEZ restent en angle vrai.</li>
           <li>Cible mobile : avance = vitesse × sin(angle) × temps de vol / distance, du côté où la cible se déplace ; la dérive affichée ne la comprend pas, la ligne « Cible mobile » donne le total.</li>
           <li>Dévers : angle de l'arme autour de la ligne de visée, côté où penche le haut de l'arme. La ligne « Dévers » donne la correction à ajouter et le total dans le repère de la lunette inclinée (tourelles, réticule) ; élévation et dérive affichées au-dessus sont celles de l'arme d'aplomb.</li>
@@ -1338,7 +1416,7 @@
 <script>
 /* solveur.js, intégré par assembler_site.py */
 /*
- * solveur.js — Solveur balistique WMLRF, version 1.0.0
+ * solveur.js — Solveur balistique WMLRF, version 1.1.0
  * Domaine : Application balistique (voir ../application_balistique.md).
  *
  * Modèle : point matériel à 3 degrés de liberté, traînée G7 ou table de traînée importée (facteur
@@ -1369,7 +1447,7 @@
   // modification publiée ; nouvelle fonction : mineur ; correction ou texte : correctif ; profil enregistré ou données
   // échangées avec l'appareil devenus incompatibles : majeur. Ajouter la ligne correspondante à la liste des versions
   // de calculateur.html (avis de mise à jour).
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
 
   // ---------------------------------------------------------------------------
   // Constantes et sources
@@ -2486,6 +2564,7 @@
     'p-bc': '0,309', 'p-poids': '147', 'p-diametre': '6,71', 'p-longueur': '36,4', 'p-pas': '190,5',
     'p-entraxe': '66,5', 'p-zero': '100',
     'p-zh': '', 'p-zo': '', 'p-ssf-e': '1', 'p-ssf-w': '1',
+    'ap-nom': '', 'ap-dec': '',
     'z-temp': '15', 'z-pression': '1013', 'z-humidite': '0',
     'k-cdf': '1', 'k-dist': '', 'k-elev': '', 'k-vit': '',
     'dsf-m1': '1,2', 'dsf-f1': '1', 'dsf-m2': '', 'dsf-f2': '', 'dsf-m3': '', 'dsf-f3': '',
@@ -3498,6 +3577,7 @@
   // ----- événements -----
   document.getElementById('formulaire').addEventListener('input', e => {
     if (RADIOS.indexOf(e.target.name) >= 0) return;
+    if (/^ap-/.test(e.target.id)) { if (e.target.id !== 'ap-fichier') sauver(); return; } // bloc Appareil : rien à recalculer
     if (CHAMPS_CALIBRATION.indexOf(e.target.id) >= 0) { sauver(); planifierCalibration(); return; }
     planifier();
   });
@@ -3539,6 +3619,189 @@
       .observe($('afficheur'));
   }
   if (etroit.addEventListener) etroit.addEventListener('change', majBarre);
+
+  // ----- appareil WMLRF : profils, lieu et mise à jour par son Wi-Fi -----
+  // Protocole v0 de firmware.md (« Interfaces fixées par ce domaine ») : page servie par l'appareil, à
+  // http://192.168.4.1/, API sur la même origine. Enregistrement d'un profil : { nom, etat, profil } ; « profil » est
+  // l'objet que la page passe au solveur (lireProfil), lu par l'appareil ; « etat », les champs du profil dans la
+  // page, gardé tel quel par l'appareil, sert à reprendre le profil dans la page.
+  const API = '/api/v0/';
+  const PROFIL_CHAMPS = IDS.filter(id => /^(v0-|v0p-|p-|z-|dsf-)/.test(id) || id === 'k-cdf' || id === 'trainee-json');
+  const PROFIL_RADIOS = ['unite', 'sens', 'modev0', 'zeroactif', 'trainee'];
+  const NOM_OCTETS_MAX = 23;   // nom gardé par l'appareil (firmware.md)
+  const RELIE_NON = 'Non relié : ouvrir cette page depuis l\'appareil (menu Wi-Fi, téléphone relié à son réseau, adresse http://192.168.4.1/).';
+  let appareil = null;         // dernière réponse de GET /api/v0/appareil
+  let confirmationEffacer = null;
+  const octets = s => new TextEncoder().encode(s).length;
+
+  async function demander(methode, chemin, corps) {
+    let rep;
+    try {
+      rep = await fetch(API + chemin, { method: methode, body: corps, cache: 'no-store',
+        headers: corps === undefined ? undefined : { 'Content-Type': 'application/json' } });
+    } catch (e) {
+      throw new Error('appareil injoignable (téléphone relié au Wi-Fi de l\'appareil ?)');
+    }
+    if (rep.status === 204) return null;
+    let json = null;
+    try { json = await rep.json(); } catch (e) { json = null; }
+    if (!rep.ok) throw new Error((json && json.erreur ? json.erreur : 'refus') + ' (' + rep.status + ')');
+    return json;
+  }
+  function majBoutonsAppareil() {
+    const relie = !!appareil, rang = Number($('ap-rang').value);
+    const occupe = relie && appareil.profils.some(p => p.rang === rang);
+    ['ap-envoyer', 'ap-lieu', 'ap-maj'].forEach(id => { $(id).disabled = !relie; });
+    ['ap-reprendre', 'ap-effacer'].forEach(id => { $(id).disabled = !occupe; });
+  }
+  function remplirRangs(choix) {
+    const sel = $('ap-rang'), noms = {};
+    (appareil ? appareil.profils : []).forEach(p => { noms[p.rang] = p.nom; });
+    const max = appareil ? appareil.profilsMax : 30;
+    sel.innerHTML = '';
+    for (let r = 0; r < max; r++) {
+      const o = document.createElement('option');
+      o.value = String(r);
+      o.textContent = (r + 1) + ' · ' + (noms[r] !== undefined ? noms[r] : 'libre');
+      sel.appendChild(o);
+    }
+    sel.value = String(choix);
+  }
+  function rangConseille() { // emplacement du profil de même nom, sinon le premier libre
+    if (!appareil) return 0;
+    const nom = $('ap-nom').value.trim(), meme = appareil.profils.find(p => p.nom === nom);
+    if (meme) return meme.rang;
+    for (let r = 0; r < appareil.profilsMax; r++) if (!appareil.profils.some(p => p.rang === r)) return r;
+    return 0;
+  }
+  async function actualiserAppareil(rangChoisi) {
+    try {
+      const a = await demander('GET', 'appareil');
+      if (!a || a.protocole !== 0 || !Array.isArray(a.profils)) throw new Error('réponse inattendue');
+      appareil = a;
+      const n = a.profils.length;
+      $('ap-etat').textContent = 'Relié : ' + a.version + ' · ' + n + (n > 1 ? ' profils' : ' profil') + ' sur ' + a.profilsMax
+        + ' · latitude ' + fmt(a.lieu.latitude, 2) + '°, déclinaison ' + fmt(a.lieu.declinaison, 1) + '°';
+    } catch (e) {
+      appareil = null;
+      $('ap-etat').textContent = RELIE_NON;
+    }
+    remplirRangs(rangChoisi !== undefined ? rangChoisi : rangConseille());
+    majBoutonsAppareil();
+  }
+  function enregistrementProfil() {
+    const nom = $('ap-nom').value.trim();
+    if (!nom) throw new ErreurChamp($('ap-nom'), 'nom requis');
+    if (octets(nom) > NOM_OCTETS_MAX) throw new ErreurChamp($('ap-nom'), NOM_OCTETS_MAX + ' octets au plus, une lettre accentuée en comptant 2');
+    const profil = lireProfil();
+    // Essai que fait l'appareil avant de garder un profil : un calcul à 100 m (firmware, main/profils.c).
+    S().resoudre(profil, { distanceM: 100, siteDeg: 0, azimutDeg: 0, latitudeDeg: 45, tempC: 15, tempPoudreC: null,
+      pressionHPa: 1013, humiditePct: 50 });
+    const e = lireEtat(), etat = {};
+    PROFIL_CHAMPS.concat(PROFIL_RADIOS).forEach(k => { etat[k] = e[k]; });
+    const texte = JSON.stringify({ nom: nom, etat: etat, profil: profil });
+    const max = appareil ? appareil.tailleMax : 16384;
+    if (octets(texte) > max) throw new Error('profil de ' + fmt(octets(texte), 0) + ' octets, ' + fmt(max, 0) + ' au plus');
+    return { nom: nom, texte: texte };
+  }
+  async function envoyerProfil() {
+    const rang = Number($('ap-rang').value);
+    $('ap-nom').removeAttribute('aria-invalid');
+    let r;
+    try { r = enregistrementProfil(); } catch (e) { sortie('ap-sortie-profil', message(e), true); return; }
+    sortie('ap-sortie-profil', 'Envoi…', false);
+    try {
+      await demander('PUT', 'profils/' + rang, r.texte);
+      await actualiserAppareil(rang);
+      sortie('ap-sortie-profil', 'Profil « ' + r.nom + ' » gardé par l\'appareil, emplacement ' + (rang + 1) + ' ('
+        + fmt(octets(r.texte), 0) + ' octets).', false);
+    } catch (e) { sortie('ap-sortie-profil', 'Envoi refusé : ' + message(e), true); }
+  }
+  async function reprendreProfil() {
+    const rang = Number($('ap-rang').value);
+    try {
+      const rec = await demander('GET', 'profils/' + rang);
+      const etat = rec && rec.etat;
+      if (!etat || typeof etat !== 'object' || typeof etat['p-poids'] !== 'string') {
+        throw new Error('profil sans les champs de la page, envoyé autrement que par elle');
+      }
+      const e = lireEtat();
+      PROFIL_CHAMPS.concat(PROFIL_RADIOS).forEach(k => { if (etat[k] !== undefined && etat[k] !== null) e[k] = String(etat[k]); });
+      ecrireEtat(e);
+      $('ap-nom').value = rec.nom || '';
+      calculer();
+      sortie('ap-sortie-profil', 'Profil « ' + rec.nom + ' » repris dans la page.', false);
+    } catch (e) { sortie('ap-sortie-profil', 'Reprise impossible : ' + message(e), true); }
+  }
+  async function effacerProfil() {
+    const b = $('ap-effacer'), rang = Number($('ap-rang').value);
+    const retablir = () => { confirmationEffacer = null; b.textContent = 'Effacer de l\'appareil'; };
+    if (!confirmationEffacer || confirmationEffacer.rang !== rang) { // premier appui : confirmation demandée
+      if (confirmationEffacer) clearTimeout(confirmationEffacer.minuterie);
+      b.textContent = 'Confirmer l\'effacement';
+      confirmationEffacer = { rang: rang, minuterie: setTimeout(retablir, 5000) };
+      return;
+    }
+    clearTimeout(confirmationEffacer.minuterie);
+    retablir();
+    try {
+      await demander('DELETE', 'profils/' + rang);
+      await actualiserAppareil(rang);
+      sortie('ap-sortie-profil', 'Emplacement ' + (rang + 1) + ' effacé.', false);
+    } catch (e) { sortie('ap-sortie-profil', 'Effacement refusé : ' + message(e), true); }
+  }
+  function majLatitudeAppareil() {
+    const v = lireValeur('t-latitude');
+    $('ap-lat').textContent = v === null || !isFinite(v) ? '—' : fmt(v, 2) + '°';
+  }
+  async function envoyerLieu() {
+    let lat, dec;
+    ['ap-dec', 't-latitude'].forEach(id => $(id).removeAttribute('aria-invalid'));
+    try {
+      lat = nombre('t-latitude');
+      if (!(lat >= -90 && lat <= 90)) throw new ErreurChamp($('t-latitude'), 'entre −90 et 90°');
+      dec = nombre('ap-dec');
+      if (!(dec >= -30 && dec <= 30)) throw new ErreurChamp($('ap-dec'), 'entre −30 et 30°');
+    } catch (e) { sortie('ap-sortie-lieu', message(e), true); return; }
+    try {
+      await demander('PUT', 'lieu', JSON.stringify({ latitude: lat, declinaison: dec }));
+      await actualiserAppareil(Number($('ap-rang').value));
+      sortie('ap-sortie-lieu', 'Lieu gardé par l\'appareil : latitude ' + fmt(lat, 2) + '°, déclinaison ' + fmt(dec, 1) + '°.', false);
+    } catch (e) { sortie('ap-sortie-lieu', 'Envoi refusé : ' + message(e), true); }
+  }
+  function envoyerMiseAJour() {
+    const f = $('ap-fichier').files[0];
+    if (!f) { sortie('ap-sortie-maj', 'Choisir l\'image de mise à jour, « …_ota.bin ».', true); return; }
+    if (!/_ota\.bin$/i.test(f.name)) {
+      sortie('ap-sortie-maj', '« ' + f.name + ' » : choisir l\'image « …_ota.bin » (application seule), pas l\'image complète.', true);
+      return;
+    }
+    const x = new XMLHttpRequest();
+    x.open('POST', API + 'mise-a-jour');
+    x.setRequestHeader('Content-Type', 'application/octet-stream');
+    x.upload.onprogress = ev => {
+      if (ev.lengthComputable) sortie('ap-sortie-maj', 'Envoi : ' + fmt(100 * ev.loaded / ev.total, 0) + ' %', false);
+    };
+    x.onload = () => {
+      let r = null;
+      try { r = JSON.parse(x.responseText); } catch (e) { r = null; }
+      if (x.status === 200 && r && r.version) sortie('ap-sortie-maj', 'Image acceptée : ' + r.version + '. L\'appareil redémarre.', false);
+      else sortie('ap-sortie-maj', 'Mise à jour refusée : ' + (r && r.erreur ? r.erreur : 'réponse ' + x.status), true);
+      $('ap-maj').disabled = !appareil;
+    };
+    x.onerror = () => { sortie('ap-sortie-maj', 'Appareil injoignable pendant l\'envoi.', true); $('ap-maj').disabled = !appareil; };
+    $('ap-maj').disabled = true;
+    sortie('ap-sortie-maj', 'Envoi : 0 %', false);
+    x.send(f);
+  }
+  $('ap-actualiser').addEventListener('click', () => actualiserAppareil());
+  $('ap-envoyer').addEventListener('click', envoyerProfil);
+  $('ap-reprendre').addEventListener('click', reprendreProfil);
+  $('ap-effacer').addEventListener('click', effacerProfil);
+  $('ap-lieu').addEventListener('click', envoyerLieu);
+  $('ap-maj').addEventListener('click', envoyerMiseAJour);
+  $('ap-rang').addEventListener('change', majBoutonsAppareil);
+  $('t-latitude').addEventListener('input', majLatitudeAppareil);
 
   // ----- version et avis de mise à jour -----
   // Le numéro vient de solveur.js. À l'ouverture d'une version que ce navigateur n'a pas encore vue (et s'il a déjà
@@ -3613,6 +3876,10 @@
   }
   ecrireEtat(sauve ? Object.assign({}, EXEMPLE, NEUTRE, sauve) : EXEMPLE);
   calculer();
+  majLatitudeAppareil();
+  remplirRangs(0);
+  majBoutonsAppareil();
+  if (location.protocol === 'http:') actualiserAppareil(); else $('ap-etat').textContent = RELIE_NON;
 })();
 </script>
 
